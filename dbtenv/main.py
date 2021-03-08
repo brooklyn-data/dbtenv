@@ -25,7 +25,7 @@ def build_args_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--python',
-        metavar='PATH',
+        metavar='<path>',
         help=f"""
             Path to the Python executable to use when installing dbt.
             The default is the Python executable used to install dbtenv, but that can be overridden by setting a

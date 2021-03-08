@@ -11,27 +11,28 @@ logger = dbtenv.LOGGER
 
 
 def build_install_args_parser(subparsers: argparse._SubParsersAction) -> None:
-    install_parser = subparsers.add_parser(
+    parser = subparsers.add_parser(
         'install',
         help="Install the specified dbt version from the Python Package Index or the specified package location."
     )
-    install_parser.add_argument(
+    parser.add_argument(
         '-f',
         '--force',
         action='store_true',
         help="Install even if the dbt version appears to already be installed."
     )
-    install_parser.add_argument('dbt_version', help="Exact version of dbt to install.")
-    install_parser.add_argument(
+    parser.add_argument('dbt_version', metavar='<dbt_version>', help="Exact version of dbt to install.")
+    parser.add_argument(
         'package_location',
         nargs='?',
+        metavar='<package_location>',
         help="""
             Location of the dbt package to install, which can be a pip-compatible version control project URL, local
             project path, or archive URL/path.
             If not specified, dbt will be installed from the Python Package Index.
         """
     )
-    install_parser.add_argument(
+    parser.add_argument(
         '-e',
         '--editable',
         action='store_true',
