@@ -12,9 +12,11 @@ logger = dbtenv.LOGGER
 
 
 def build_uninstall_args_parser(subparsers: argparse._SubParsersAction) -> None:
+    description = "Uninstall the specified dbt version."
     parser = subparsers.add_parser(
         'uninstall',
-        help="Uninstall the specified dbt version."
+        description=description,
+        help=description
     )
     parser.add_argument(
         '-f',
