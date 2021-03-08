@@ -67,8 +67,14 @@ def main(args: List[str] = None) -> None:
 
         args_parser = build_args_parser()
         parsed_args = args_parser.parse_args(args)
-        if parsed_args.debug or dbtenv.get_debug_default():
-            logger.setLevel(logging.DEBUG)
+
+        if parsed_args.debug:
+            dbtenv.set_debug(parsed_args.debug)
+        if parsed_args.python:
+            dbtenv.set_python(parsed_args.python)
+        if parsed_args.auto_install:
+            dbtenv.set_auto_install(parsed_args.auto_install)
+
         logger.debug(f"Parsed arguments = {parsed_args}")
 
         subcommand = parsed_args.subcommand

@@ -48,7 +48,7 @@ def install(parsed_args: argparse.Namespace) -> None:
         else:
             raise dbtenv.DbtenvRuntimeError(f"`{dbt_version_dir}` already exists.  Specify --force to overwrite it.")
 
-    python = parsed_args.python or dbtenv.get_python_default()
+    python = dbtenv.get_python()
     _check_python_compatibility(python)
 
     logger.debug(f"Creating virtual environment in `{dbt_version_dir}` using `{python}`.")
