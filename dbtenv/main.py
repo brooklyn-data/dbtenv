@@ -8,6 +8,7 @@ from typing import List
 
 import dbtenv
 import dbtenv.install
+import dbtenv.uninstall
 
 
 EXIT_CODES = namedtuple('ExitCodes', 'success failure')(success=0, failure=1)
@@ -54,6 +55,7 @@ def build_args_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
     dbtenv.install.build_install_args_parser(subparsers)
+    dbtenv.uninstall.build_uninstall_args_parser(subparsers)
 
     return parser
 
@@ -76,6 +78,8 @@ def main(args: List[str] = None) -> None:
 
         if subcommand == 'install':
             dbtenv.install.install(parsed_args)
+        elif subcommand == 'uninstall':
+            dbtenv.uninstall.uninstall(parsed_args)
         else:
             raise dbtenv.DbtenvRuntimeError(f"Unknown sub-command `{subcommand}`.")
     except dbtenv.DbtenvRuntimeError as error:
