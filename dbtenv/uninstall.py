@@ -1,9 +1,7 @@
 import argparse
 import os
 import os.path
-import re
 import shutil
-import subprocess
 
 import dbtenv
 

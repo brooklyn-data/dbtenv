@@ -2,7 +2,6 @@
 
 import argparse
 from collections import namedtuple
-import logging
 import sys
 from typing import List
 
