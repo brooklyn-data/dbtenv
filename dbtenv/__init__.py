@@ -2,6 +2,7 @@ import logging
 import os
 import os.path
 import sys
+from typing import Optional
 
 
 VERSIONS_DIRECTORY  = '~/.dbt/versions'
@@ -12,13 +13,13 @@ DBT_VERSION_VAR = 'DBT_VERSION'
 
 DBT_PACKAGE_JSON_URL = 'https://pypi.org/pypi/dbt/json'
 
-PYTHON = None
+PYTHON: Optional[str] = None
 PYTHON_VAR = 'DBTENV_PYTHON'
 
-AUTO_INSTALL: bool = None
+AUTO_INSTALL: Optional[bool] = None
 AUTO_INSTALL_VAR = 'DBTENV_AUTO_INSTALL'
 
-DEBUG: bool = None
+DEBUG: Optional[bool] = None
 DEBUG_VAR = 'DBTENV_DEBUG'
 
 LOGGER = logging.getLogger('dbtenv')
