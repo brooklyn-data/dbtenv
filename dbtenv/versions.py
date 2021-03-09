@@ -7,6 +7,7 @@ import urllib.request
 
 import dbtenv
 import dbtenv.version
+import dbtenv.which
 
 
 logger = dbtenv.LOGGER
@@ -52,7 +53,7 @@ def run_versions_command(parsed_args: argparse.Namespace) -> None:
 
 
 def get_installed_dbt_versions() -> List[str]:
-    return [entry.name for entry in os.scandir(dbtenv.get_versions_directory()) if entry.is_dir]
+    return [entry.name for entry in os.scandir(dbtenv.get_versions_directory()) if dbtenv.which.try_get_dbt(entry.name)]
 
 
 def get_dbt_package_versions() -> List[str]:

@@ -1,5 +1,6 @@
 import argparse
 import os
+from typing import Optional
 
 import dbtenv
 import dbtenv.version
@@ -51,3 +52,10 @@ def get_dbt(dbt_version: str) -> str:
             return dbt_path
 
     raise dbtenv.DbtenvRuntimeError(f"No dbt executable found in `{dbt_version_dir}`.")
+
+
+def try_get_dbt(dbt_version: str) -> Optional[str]:
+    try:
+        return get_dbt(dbt_version)
+    except:
+        return None
