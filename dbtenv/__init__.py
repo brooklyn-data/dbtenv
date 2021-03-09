@@ -60,7 +60,7 @@ def get_python() -> str:
     for possible_python_subpath_parts in [['bin', 'python3'], ['bin', 'python'], ['python.exe']]:
         python_path = os.path.join(base_exec_path, *possible_python_subpath_parts)
         if os.path.isfile(python_path):
-            logger.debug(f"Using Python executable `{python_path}`.")
+            logger.debug(f"Found Python executable `{python_path}`.")
             return python_path
 
     raise DbtenvRuntimeError(f"No Python executable found in `{base_exec_path}`.")

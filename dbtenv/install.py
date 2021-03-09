@@ -124,7 +124,7 @@ def _find_pip(venv_path: str) -> str:
     for possible_pip_subpath_parts in [['bin', 'pip'], ['Scripts', 'pip.exe']]:
         pip_path = os.path.join(venv_path, *possible_pip_subpath_parts)
         if os.path.isfile(pip_path):
-            logger.debug(f"Using pip executable `{pip_path}`.")
+            logger.debug(f"Found pip executable `{pip_path}`.")
             return pip_path
 
     raise dbtenv.DbtenvRuntimeError(f"No pip executable found in `{venv_path}`.")
