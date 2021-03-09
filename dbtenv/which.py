@@ -39,9 +39,13 @@ def run_which_command(parsed_args: argparse.Namespace) -> None:
         dbt_version = parsed_args.dbt_version
     else:
         dbt_version, dbt_version_source = dbtenv.version.get_version(os.getcwd())
-        logger.info(f"Using dbt {dbt_version} (set by {dbt_version_source}).")
+        if dbt_version:
+            logger.info(f"Using dbt {dbt_version} (set by {dbt_version_source}).")
+        else:
+            logger.info("No dbt version has been set globally, for the local directory, or for the current shell.")
 
-    print(get_dbt(dbt_version))
+    if dbt_version:
+        print(get_dbt(dbt_version))
 
 
 def get_dbt(dbt_version: str) -> str:
