@@ -82,9 +82,9 @@ def main(args: List[str] = None) -> None:
             sys.exit(EXIT_CODES.failure)
 
         if subcommand == 'install':
-            dbtenv.install.install(parsed_args)
+            dbtenv.install.run_install_command(parsed_args)
         elif subcommand == 'uninstall':
-            dbtenv.uninstall.uninstall(parsed_args)
+            dbtenv.uninstall.run_uninstall_command(parsed_args)
         else:
             raise dbtenv.DbtenvRuntimeError(f"Unknown sub-command `{subcommand}`.")
     except dbtenv.DbtenvRuntimeError as error:

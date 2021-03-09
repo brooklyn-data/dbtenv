@@ -3,6 +3,7 @@ import os
 import os.path
 import re
 import subprocess
+from typing import Optional
 
 import dbtenv
 
@@ -42,11 +43,19 @@ def build_install_args_parser(subparsers: argparse._SubParsersAction) -> None:
     )
 
 
-def install(parsed_args: argparse.Namespace) -> None:
-    dbt_version = parsed_args.dbt_version
+def run_install_command(parsed_args: argparse.Namespace) -> None:
+    install(
+        parsed_args.dbt_version,
+        force=parsed_args.force,
+        package_location=parsed_args.package_location,
+        editable=parsed_args.editable
+    )
+
+
+def install(dbt_version: str, force: bool = False, package_location: Optional[str] = None, editable: bool = False) -> None:
     dbt_version_dir = dbtenv.get_version_directory(dbt_version)
     if os.path.isdir(dbt_version_dir) and any(os.scandir(dbt_version_dir)):
-        if parsed_args.force:
+        if force:
             logger.info(f"`{dbt_version_dir}` already exists but will be overwritten because --force was specified.")
         else:
             raise dbtenv.DbtenvRuntimeError(f"`{dbt_version_dir}` already exists.  Specify --force to overwrite it.")
@@ -61,10 +70,9 @@ def install(parsed_args: argparse.Namespace) -> None:
 
     pip = _find_pip(dbt_version_dir)
     pip_args = ['install', '--pre', '--no-cache-dir', '--disable-pip-version-check']
-    package_location = parsed_args.package_location
     package_source = f"`{package_location}`" if package_location else "the Python Package Index"
     if package_location:
-        if parsed_args.editable:
+        if editable:
             pip_args.append('--editable')
         pip_args.append(package_location)
     else:
