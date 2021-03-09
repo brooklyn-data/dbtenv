@@ -10,6 +10,8 @@ LOCAL_VERSION_FILE  = '.dbt_version'
 
 DBT_VERSION_VAR = 'DBT_VERSION'
 
+DBT_PACKAGE_JSON_URL = 'https://pypi.org/pypi/dbt/json'
+
 PYTHON = None
 PYTHON_VAR = 'DBTENV_PYTHON'
 

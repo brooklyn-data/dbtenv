@@ -7,6 +7,7 @@ import dbtenv
 import dbtenv.install
 import dbtenv.uninstall
 import dbtenv.version
+import dbtenv.versions
 
 
 EXIT_CODES = namedtuple('ExitCodes', 'success failure')(success=0, failure=1)
@@ -52,6 +53,7 @@ def build_args_parser() -> argparse.ArgumentParser:
     )
 
     subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
+    dbtenv.versions.build_versions_args_parser(subparsers)
     dbtenv.install.build_install_args_parser(subparsers)
     dbtenv.version.build_version_args_parser(subparsers)
     dbtenv.uninstall.build_uninstall_args_parser(subparsers)
@@ -81,7 +83,9 @@ def main(args: List[str] = None) -> None:
             args_parser.print_help()
             sys.exit(EXIT_CODES.failure)
 
-        if subcommand == 'install':
+        if subcommand == 'versions':
+            dbtenv.versions.run_versions_command(parsed_args)
+        elif subcommand == 'install':
             dbtenv.install.run_install_command(parsed_args)
         elif subcommand == 'version':
             dbtenv.version.run_version_command(parsed_args)
