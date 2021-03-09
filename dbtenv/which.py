@@ -1,6 +1,6 @@
 import argparse
 import os
-from typing import Optional
+from typing import List, Optional
 
 import dbtenv
 import dbtenv.version
@@ -9,10 +9,10 @@ import dbtenv.version
 logger = dbtenv.LOGGER
 
 
-def build_which_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
+def build_which_args_parser(subparsers: argparse._SubParsersAction, parent_parsers: List[argparse.ArgumentParser]) -> None:
     parser = subparsers.add_parser(
         'which',
-        parents=[parent_parser],
+        parents=parent_parsers,
         description=f"""
             Show the full path to the executable of the specified dbt version or the dbt version automatically detected
             from the environment based on the global `{dbtenv.GLOBAL_VERSION_FILE}` file, local

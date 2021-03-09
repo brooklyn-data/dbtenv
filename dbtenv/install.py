@@ -3,7 +3,7 @@ import os
 import os.path
 import re
 import subprocess
-from typing import Optional
+from typing import List, Optional
 
 import dbtenv
 
@@ -11,11 +11,11 @@ import dbtenv
 logger = dbtenv.LOGGER
 
 
-def build_install_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
+def build_install_args_parser(subparsers: argparse._SubParsersAction, parent_parsers: List[argparse.ArgumentParser]) -> None:
     description = "Install the specified dbt version from the Python Package Index or the specified package location."
     parser = subparsers.add_parser(
         'install',
-        parents=[parent_parser],
+        parents=parent_parsers,
         description=description,
         help=description
     )
