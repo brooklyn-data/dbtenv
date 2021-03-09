@@ -18,14 +18,33 @@ logger = dbtenv.LOGGER
 
 
 def build_args_parser() -> argparse.ArgumentParser:
+    command_common_args_parser    = _build_common_args_parser()
+    subcommand_common_args_parser = _build_common_args_parser(dest_prefix='subcommand_')
+
     parser = argparse.ArgumentParser(
         description="""
             Lets you easily install and switch between multiple versions of dbt in dedicated Python virtual environments.
         """,
+        parents=[command_common_args_parser],
         epilog="Run a sub-command with the `--help` option to see help for that sub-command."
     )
+
+    subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
+    dbtenv.versions.build_versions_args_parser(subparsers, subcommand_common_args_parser)
+    dbtenv.install.build_install_args_parser(subparsers, subcommand_common_args_parser)
+    dbtenv.version.build_version_args_parser(subparsers, subcommand_common_args_parser)
+    dbtenv.which.build_which_args_parser(subparsers, subcommand_common_args_parser)
+    dbtenv.execute.build_execute_args_parser(subparsers, subcommand_common_args_parser)
+    dbtenv.uninstall.build_uninstall_args_parser(subparsers, subcommand_common_args_parser)
+
+    return parser
+
+
+def _build_common_args_parser(dest_prefix: str = '') -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         '--python',
+        dest=f'{dest_prefix}python',
         metavar='<path>',
         help=f"""
             Path to the Python executable to use when installing dbt.
@@ -35,6 +54,7 @@ def build_args_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--auto-install',
+        dest=f'{dest_prefix}auto_install',
         action='store_const',
         const=True,
         help=f"""
@@ -45,6 +65,7 @@ def build_args_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--debug',
+        dest=f'{dest_prefix}debug',
         action='store_const',
         const=True,
         help=f"""
@@ -53,15 +74,6 @@ def build_args_parser() -> argparse.ArgumentParser:
             environment variable.
         """
     )
-
-    subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
-    dbtenv.versions.build_versions_args_parser(subparsers)
-    dbtenv.install.build_install_args_parser(subparsers)
-    dbtenv.version.build_version_args_parser(subparsers)
-    dbtenv.which.build_which_args_parser(subparsers)
-    dbtenv.execute.build_execute_args_parser(subparsers)
-    dbtenv.uninstall.build_uninstall_args_parser(subparsers)
-
     return parser
 
 
@@ -72,17 +84,22 @@ def main(args: List[str] = None) -> None:
 
         args_parser = build_args_parser()
         parsed_args = args_parser.parse_args(args)
+        subcommand = parsed_args.subcommand
 
-        if parsed_args.debug:
-            dbtenv.set_debug(parsed_args.debug)
-        if parsed_args.python:
-            dbtenv.set_python(parsed_args.python)
-        if parsed_args.auto_install:
-            dbtenv.set_auto_install(parsed_args.auto_install)
+        debug = parsed_args.debug or (subcommand and parsed_args.subcommand_debug)
+        if debug:
+            dbtenv.set_debug(debug)
+
+        python = parsed_args.python or (subcommand and parsed_args.subcommand_python)
+        if python:
+            dbtenv.set_python(python)
+
+        auto_install = parsed_args.auto_install or (subcommand and parsed_args.subcommand_auto_install)
+        if auto_install:
+            dbtenv.set_auto_install(auto_install)
 
         logger.debug(f"Parsed arguments = {parsed_args}")
 
-        subcommand = parsed_args.subcommand
         if not subcommand:
             args_parser.print_help()
             sys.exit(EXIT_CODES.failure)

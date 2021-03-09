@@ -10,13 +10,14 @@ import dbtenv.install
 logger = dbtenv.LOGGER
 
 
-def build_version_args_parser(subparsers: argparse._SubParsersAction) -> None:
+def build_version_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
     description = """
         Show the dbt version automatically detected from the environment, or show/set the dbt version globally, for the
         local directory, or for the current shell.
     """
     parser = subparsers.add_parser(
         'version',
+        parents=[parent_parser],
         description=description,
         help=description
     )

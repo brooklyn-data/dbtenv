@@ -11,10 +11,11 @@ import dbtenv
 logger = dbtenv.LOGGER
 
 
-def build_install_args_parser(subparsers: argparse._SubParsersAction) -> None:
+def build_install_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
     description = "Install the specified dbt version from the Python Package Index or the specified package location."
     parser = subparsers.add_parser(
         'install',
+        parents=[parent_parser],
         description=description,
         help=description
     )

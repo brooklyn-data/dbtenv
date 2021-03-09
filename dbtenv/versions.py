@@ -13,10 +13,11 @@ import dbtenv.which
 logger = dbtenv.LOGGER
 
 
-def build_versions_args_parser(subparsers: argparse._SubParsersAction) -> None:
+def build_versions_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
     description = "Show the dbt versions that are available from the Python Package Index or that are installed."
     parser = subparsers.add_parser(
         'versions',
+        parents=[parent_parser],
         description=description,
         help=description
     )
