@@ -23,11 +23,15 @@ def build_args_parser() -> argparse.ArgumentParser:
     common_subcommand_args_parser = _build_common_args_parser(dest_prefix='subcommand_')
 
     parser = argparse.ArgumentParser(
-        description="""
+        description=f"""
             Lets you easily install and switch between multiple versions of dbt in dedicated Python virtual environments.
+            The dbt version-specific Python virtual environments are created under `{dbtenv.VERSIONS_DIRECTORY}`.
+            The dbt version to use can be configured globally in a `{dbtenv.GLOBAL_VERSION_FILE}` file, locally within
+            specific directories using `{dbtenv.LOCAL_VERSION_FILE}` files, or in your shell using a
+            {dbtenv.DBT_VERSION_VAR} environment variable.
         """,
         parents=[common_command_args_parser],
-        epilog="Run a sub-command with the `--help` option to see help for that sub-command."
+        epilog="Run a sub-command with the --help option to see help for that sub-command."
     )
 
     python_arg_parser = argparse.ArgumentParser(add_help=False)
