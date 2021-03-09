@@ -12,17 +12,16 @@ logger = dbtenv.LOGGER
 
 
 def build_execute_args_parser(subparsers: argparse._SubParsersAction, parent_parser: argparse.ArgumentParser) -> None:
-    description = f"""
-        Execute a dbt command using the specified dbt version or the dbt version automatically detected from the
-        environment based on the global `{dbtenv.GLOBAL_VERSION_FILE}` file, local `{dbtenv.LOCAL_VERSION_FILE}` files,
-        or {dbtenv.DBT_VERSION_VAR} environment variable.
-    """
     parser = subparsers.add_parser(
         'execute',
         aliases=['exec'],
         parents=[parent_parser],
-        description=description,
-        help=description
+        description=f"""
+            Execute a dbt command using the specified dbt version or the dbt version automatically detected from the
+            environment based on the global `{dbtenv.GLOBAL_VERSION_FILE}` file, local `{dbtenv.LOCAL_VERSION_FILE}` files,
+            or {dbtenv.DBT_VERSION_VAR} environment variable.
+        """,
+        help="Execute a dbt command using the specified dbt version or the dbt version automatically detected from the environment."
     )
     parser.add_argument(
         '--dbt',
