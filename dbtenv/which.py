@@ -56,7 +56,7 @@ def get_dbt(dbt_version: str) -> str:
     for possible_dbt_subpath_parts in [['bin', 'dbt'], ['Scripts', 'dbt.exe']]:
         dbt_path = os.path.join(dbt_version_dir, *possible_dbt_subpath_parts)
         if os.path.isfile(dbt_path):
-            logger.debug(f"Found dbt executable `{dbt_path}`.")
+            logger.debug(f"Using dbt executable `{dbt_path}`.")
             return dbt_path
 
     raise dbtenv.DbtenvRuntimeError(f"No dbt executable found in `{dbt_version_dir}`.")
