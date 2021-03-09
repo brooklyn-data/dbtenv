@@ -35,7 +35,7 @@ def run_which_command(parsed_args: argparse.Namespace) -> None:
         dbt_version = parsed_args.dbt_version
     else:
         dbt_version, dbt_version_source = dbtenv.version.get_version(os.getcwd())
-        logger.info(f"dbt {dbt_version}  (set by {dbt_version_source})")
+        logger.info(f"Using dbt {dbt_version} (set by {dbt_version_source}).")
 
     print(get_dbt(dbt_version))
 

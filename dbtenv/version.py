@@ -105,7 +105,7 @@ def get_global_version() -> Optional[str]:
 
 
 def set_global_version(dbt_version: str) -> None:
-    ensure_dbt_version_installed(dbt_version)
+    dbtenv.install.ensure_dbt_version_installed(dbt_version)
     version_file = dbtenv.get_global_version_file()
     _write_file_line(version_file, dbt_version)
     logger.info(f"{dbt_version} is now set as the global dbt version in `{version_file}`.")
@@ -129,7 +129,7 @@ def get_local_version(working_directory: str) -> Tuple[Optional[str], Optional[s
 
 
 def set_local_version(working_directory: str, dbt_version: str) -> None:
-    ensure_dbt_version_installed(dbt_version)
+    dbtenv.install.ensure_dbt_version_installed(dbt_version)
     version_file = os.path.join(working_directory, dbtenv.LOCAL_VERSION_FILE)
     _write_file_line(version_file, dbt_version)
     logger.info(f"{dbt_version} is now set as the local dbt version in `{version_file}`.")
@@ -140,16 +140,6 @@ def get_shell_version() -> Optional[str]:
         return os.environ[dbtenv.DBT_VERSION_VAR]
 
     return None
-
-
-def ensure_dbt_version_installed(dbt_version: str) -> None:
-    if not os.path.isdir(dbtenv.get_version_directory(dbt_version)):
-        if dbtenv.get_auto_install():
-            dbtenv.install.install(dbt_version)
-        else:
-            raise dbtenv.DbtenvRuntimeError(
-                f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}` and auto-install is not enabled."
-            )
 
 
 def _read_file_line(file_path: str) -> str:

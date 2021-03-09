@@ -4,6 +4,7 @@ import sys
 from typing import List
 
 import dbtenv
+import dbtenv.execute
 import dbtenv.install
 import dbtenv.uninstall
 import dbtenv.version
@@ -58,6 +59,7 @@ def build_args_parser() -> argparse.ArgumentParser:
     dbtenv.install.build_install_args_parser(subparsers)
     dbtenv.version.build_version_args_parser(subparsers)
     dbtenv.which.build_which_args_parser(subparsers)
+    dbtenv.execute.build_execute_args_parser(subparsers)
     dbtenv.uninstall.build_uninstall_args_parser(subparsers)
 
     return parser
@@ -93,6 +95,8 @@ def main(args: List[str] = None) -> None:
             dbtenv.version.run_version_command(parsed_args)
         elif subcommand == 'which':
             dbtenv.which.run_which_command(parsed_args)
+        elif subcommand in ('execute', 'exec'):
+            dbtenv.execute.run_execute_command(parsed_args)
         elif subcommand == 'uninstall':
             dbtenv.uninstall.run_uninstall_command(parsed_args)
         else:

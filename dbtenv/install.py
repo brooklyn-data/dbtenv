@@ -78,7 +78,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
     else:
         pip_args.append(f'dbt=={dbt_version}')
     logger.info(f"Installing dbt {dbt_version} from {package_source} in `{dbt_version_dir}`.")
-    logger.debug(f"Running pip with arguments {pip_args}.")
+    logger.debug(f"Running `{pip}` with arguments {pip_args}.")
     pip_result = subprocess.run([pip, *pip_args])
     if pip_result.returncode != 0:
         raise dbtenv.DbtenvRuntimeError(
@@ -86,6 +86,16 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         )
 
     logger.info(f"Successfully installed dbt {dbt_version} from {package_source} in `{dbt_version_dir}`.")
+
+
+def ensure_dbt_version_installed(dbt_version: str) -> None:
+    if not os.path.isdir(dbtenv.get_version_directory(dbt_version)):
+        if dbtenv.get_auto_install():
+            install(dbt_version)
+        else:
+            raise dbtenv.DbtenvRuntimeError(
+                f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}` and auto-install is not enabled."
+            )
 
 
 def _check_python_compatibility(python: str) -> None:
