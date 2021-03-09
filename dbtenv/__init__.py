@@ -6,6 +6,9 @@ import sys
 
 VERSIONS_DIRECTORY  = '~/.dbt/versions'
 GLOBAL_VERSION_FILE = '~/.dbt/version'
+LOCAL_VERSION_FILE  = '.dbt_version'
+
+DBT_VERSION_VAR = 'DBT_VERSION'
 
 PYTHON = None
 PYTHON_VAR = 'DBTENV_PYTHON'
