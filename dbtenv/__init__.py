@@ -99,3 +99,7 @@ def set_debug(debug: bool) -> None:
 
 def string_is_true(string: str) -> bool:
     return isinstance(string, str) and string.strip().lower() in ('1', 't', 'true', 'y', 'yes')
+
+
+# Enable debug logging during initialization if it's configured.
+set_debug(get_debug())
