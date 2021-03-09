@@ -85,6 +85,8 @@ def main(args: List[str] = None) -> None:
         if args is None:
             args = sys.argv[1:]
 
+        logger.debug(f"Arguments = {args}")
+
         args_parser = build_args_parser()
         parsed_args = args_parser.parse_args(args)
 
