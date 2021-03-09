@@ -1,5 +1,4 @@
 import argparse
-from ast import parse
 from collections import namedtuple
 import sys
 from typing import List
