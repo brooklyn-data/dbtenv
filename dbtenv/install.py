@@ -71,12 +71,13 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
 
     pip = _find_pip(dbt_version_dir)
     pip_args = ['install', '--pre', '--no-cache-dir', '--disable-pip-version-check']
-    package_source = f"`{package_location}`" if package_location else "the Python Package Index"
     if package_location:
+        package_source = f"`{package_location}`"
         if editable:
             pip_args.append('--editable')
         pip_args.append(package_location)
     else:
+        package_source = "the Python Package Index"
         pip_args.append(f'dbt=={dbt_version}')
     logger.info(f"Installing dbt {dbt_version} from {package_source} into `{dbt_version_dir}`.")
     logger.debug(f"Running `{pip}` with arguments {pip_args}.")
