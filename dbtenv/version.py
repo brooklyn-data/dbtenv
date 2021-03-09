@@ -147,7 +147,9 @@ def ensure_dbt_version_installed(dbt_version: str) -> None:
         if dbtenv.get_auto_install():
             dbtenv.install.install(dbt_version)
         else:
-            raise dbtenv.DbtenvRuntimeError(f"No dbt {dbt_version} installation found and auto-install is not enabled.")
+            raise dbtenv.DbtenvRuntimeError(
+                f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}` and auto-install is not enabled."
+            )
 
 
 def _read_file_line(file_path: str) -> str:
