@@ -5,8 +5,8 @@ import sys
 from typing import Optional
 
 
-VERSIONS_DIRECTORY  = '~/.dbt/versions'
-GLOBAL_VERSION_FILE = '~/.dbt/version'
+VERSIONS_DIRECTORY  = os.path.normpath('~/.dbt/versions')
+GLOBAL_VERSION_FILE = os.path.normpath('~/.dbt/version')
 LOCAL_VERSION_FILE  = '.dbt_version'
 
 DBT_VERSION_VAR = 'DBT_VERSION'
