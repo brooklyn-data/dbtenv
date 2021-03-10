@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from typing import List
 
 import dbtenv
@@ -63,6 +64,10 @@ def execute_dbt(dbt_version: str, args: List[str]) -> None:
     dbt = dbtenv.which.get_dbt(dbt_version)
     dbt_process_args = [dbt, *args]
     logger.debug(f"Running `{dbt}` with arguments {args}.")
+
+    # Flush any buffered output before replacing this process.
+    sys.stdout.flush()
+    sys.stderr.flush()
 
     # Execute dbt, replacing the current process.
     os.execv(dbt, dbt_process_args)
