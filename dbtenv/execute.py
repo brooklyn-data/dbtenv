@@ -69,5 +69,5 @@ def execute_dbt(dbt_version: str, args: List[str]) -> None:
     sys.stdout.flush()
     sys.stderr.flush()
 
-    # Execute dbt, replacing the current process.
+    # Execute dbt, replacing the current process so things like keyboard interrupts work normally.
     os.execv(dbt, dbt_process_args)
