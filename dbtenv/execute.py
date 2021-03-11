@@ -54,7 +54,7 @@ def run_execute_command(parsed_args: argparse.Namespace) -> None:
         if dbt_version:
             logger.info(f"Using dbt {dbt_version} (set by {dbt_version_source}).")
         else:
-            raise dbtenv.DbtenvRuntimeError("No dbt version has been set globally, for the local directory, or for the current shell.")
+            raise dbtenv.DbtenvError("No dbt version has been set globally, for the local directory, or for the current shell.")
 
     dbtenv.install.ensure_dbt_version_installed(dbt_version)
 

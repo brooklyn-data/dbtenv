@@ -59,7 +59,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         if force:
             logger.info(f"`{dbt_version_dir}` already exists but will be overwritten because --force was specified.")
         else:
-            raise dbtenv.DbtenvRuntimeError(f"`{dbt_version_dir}` already exists.  Specify --force to overwrite it.")
+            raise dbtenv.DbtenvError(f"`{dbt_version_dir}` already exists.  Specify --force to overwrite it.")
 
     python = dbtenv.get_python()
     _check_python_compatibility(python)
@@ -67,7 +67,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
     logger.debug(f"Creating virtual environment in `{dbt_version_dir}` using `{python}`.")
     venv_result = subprocess.run([python, '-m' 'venv', '--clear', dbt_version_dir])
     if venv_result.returncode != 0:
-        raise dbtenv.DbtenvRuntimeError(f"Failed to create virtual environment in `{dbt_version_dir}`.")
+        raise dbtenv.DbtenvError(f"Failed to create virtual environment in `{dbt_version_dir}`.")
 
     pip = _find_pip(dbt_version_dir)
     pip_args = ['install', '--pre', '--no-cache-dir', '--disable-pip-version-check']
@@ -83,9 +83,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
     logger.debug(f"Running `{pip}` with arguments {pip_args}.")
     pip_result = subprocess.run([pip, *pip_args])
     if pip_result.returncode != 0:
-        raise dbtenv.DbtenvRuntimeError(
-            f"Failed to install dbt {dbt_version} from {package_source} into `{dbt_version_dir}`."
-        )
+        raise dbtenv.DbtenvError(f"Failed to install dbt {dbt_version} from {package_source} into `{dbt_version_dir}`.")
 
     logger.info(f"Successfully installed dbt {dbt_version} from {package_source} into `{dbt_version_dir}`.")
 
@@ -95,7 +93,7 @@ def ensure_dbt_version_installed(dbt_version: str) -> None:
         if dbtenv.get_auto_install():
             install(dbt_version)
         else:
-            raise dbtenv.DbtenvRuntimeError(
+            raise dbtenv.DbtenvError(
                 f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}` and auto-install is not enabled."
             )
 
@@ -103,17 +101,17 @@ def ensure_dbt_version_installed(dbt_version: str) -> None:
 def _check_python_compatibility(python: str) -> None:
     python_version_result = subprocess.run([python, '--version'], stdout=subprocess.PIPE, text=True)
     if python_version_result.returncode != 0:
-        raise dbtenv.DbtenvRuntimeError(f"Failed to run `{python}`.")
+        raise dbtenv.DbtenvError(f"Failed to run `{python}`.")
     python_version_output = python_version_result.stdout.strip()
     python_version_match = re.search(r'(\d+)\.(\d+)\.\d+\S*', python_version_output)
     if not python_version_match:
-        raise dbtenv.DbtenvRuntimeError(f"No Python version number found in \"{python_version_output}\".")
+        raise dbtenv.DbtenvError(f"No Python version number found in \"{python_version_output}\".")
     python_version = python_version_match[0]
     python_major_version = int(python_version_match[1])
     python_minor_version = int(python_version_match[2])
 
     if python_major_version == 3 and python_minor_version >= 9:
-        raise dbtenv.DbtenvRuntimeError(
+        raise dbtenv.DbtenvError(
             f"Python {python_version} is being used, but dbt currently isn't compatible with Python 3.9 or above."
         )
 
@@ -127,4 +125,4 @@ def _find_pip(venv_path: str) -> str:
             logger.debug(f"Found pip executable `{pip_path}`.")
             return pip_path
 
-    raise dbtenv.DbtenvRuntimeError(f"No pip executable found in `{venv_path}`.")
+    raise dbtenv.DbtenvError(f"No pip executable found in `{venv_path}`.")

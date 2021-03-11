@@ -32,7 +32,7 @@ LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
 
-class DbtenvRuntimeError(RuntimeError):
+class DbtenvError(RuntimeError):
     pass
 
 
@@ -69,7 +69,7 @@ def get_python() -> str:
             logger.debug(f"Found Python executable `{python_path}`.")
             return python_path
 
-    raise DbtenvRuntimeError(f"No Python executable found in `{base_exec_path}`.")
+    raise DbtenvError(f"No Python executable found in `{base_exec_path}`.")
 
 
 def set_python(python: str) -> None:

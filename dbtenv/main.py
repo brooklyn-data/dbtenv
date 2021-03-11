@@ -125,8 +125,8 @@ def main(args: List[str] = None) -> None:
         elif subcommand == 'uninstall':
             dbtenv.uninstall.run_uninstall_command(parsed_args)
         else:
-            raise dbtenv.DbtenvRuntimeError(f"Unknown sub-command `{subcommand}`.")
-    except dbtenv.DbtenvRuntimeError as error:
+            raise dbtenv.DbtenvError(f"Unknown sub-command `{subcommand}`.")
+    except dbtenv.DbtenvError as error:
         logger.error(error)
         sys.exit(EXIT_CODES.failure)
     except dbtenv.DbtError as dbt_error:
