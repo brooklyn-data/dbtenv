@@ -21,9 +21,13 @@ TBD
 ## How it works
 
 ### Installing dbt versions
-You can run `dbtenv versions` to list the versions of dbt available to install from the [Python Package Index](https://pypi.org/project/dbt/#history), and then run `dbtenv install <version>` to manually install a version, or use dbtenv's auto-install feature by setting a `DBTENV_AUTO_INSTALL=true` environment variable or specifying `--auto-install` when running `dbtenv version` or `dbtenv execute`.
+You can run `dbtenv versions` to list the versions of dbt available to install from the [Python Package Index](https://pypi.org/project/dbt/#history), and then run `dbtenv install <version>` to manually install a version, or use dbtenv's auto-install feature by setting a `DBTENV_AUTO_INSTALL` environment variable to `true` or specifying `--auto-install` when running `dbtenv version` or `dbtenv execute`.
 
-The dbt version-specific Python virtual environments are created under `~/.dbt/versions`.
+Notes:
+- The dbt version-specific Python virtual environments are created under `~/.dbt/versions`.
+- By default dbtenv uses whichever Python version it was installed with to install dbt, but that can be changed by setting a `DBTENV_PYTHON` environment variable to the path of a different Python executable, or specifying `--python <path>` when running `dbtenv install`.
+
+**Important:**  dbt currently isn't compatible with Python 3.9 or above, so if dbtenv was installed with Python 3.9 or above you will need to specify a compatible Python version to install dbt.
 
 ### Switching between dbt versions
 dbtenv determines which dbt version to use by trying to read it from the following sources, in this order, using the first one it finds:
