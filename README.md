@@ -15,7 +15,8 @@ dbtenv lets you easily install and run multiple versions of [dbt](https://docs.g
 
 
 ## Installation
-TBD
+
+Run `pip3 install git+https://github.com/brooklyn-data/dbtenv#egg=dbtenv`.
 
 
 ## How it works
