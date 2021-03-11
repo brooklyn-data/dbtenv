@@ -12,7 +12,7 @@ import dbtenv.versions
 import dbtenv.which
 
 
-EXIT_CODES = namedtuple('ExitCodes', 'success failure')(success=0, failure=1)
+EXIT_CODES = namedtuple('ExitCodes', 'success failure interrupted')(success=0, failure=1, interrupted=2)
 
 logger = dbtenv.LOGGER
 
@@ -126,6 +126,9 @@ def main(args: List[str] = None) -> None:
             dbtenv.uninstall.run_uninstall_command(parsed_args)
         else:
             raise dbtenv.DbtenvRuntimeError(f"Unknown sub-command `{subcommand}`.")
+    except KeyboardInterrupt:
+        logger.debug("Received keyboard interrupt.")
+        sys.exit(EXIT_CODES.interrupted)
     except dbtenv.DbtenvRuntimeError as error:
         logger.error(error)
         sys.exit(EXIT_CODES.failure)
