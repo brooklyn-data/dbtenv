@@ -23,10 +23,11 @@ TBD
 Run `dbtenv --help` to see some overall documentation for dbtenv, including its available sub-commands, and run `dbtenv <sub-command> --help` to see documentation for that sub-command.
 
 ### Installing dbt versions
-You can run `dbtenv versions` to list the versions of dbt available to install from the [Python Package Index](https://pypi.org/project/dbt/#history), and then run `dbtenv install <version>` to manually install a version, or use dbtenv's auto-install feature by setting a `DBTENV_AUTO_INSTALL` environment variable to `true` or specifying `--auto-install` when running `dbtenv version` or `dbtenv execute`.
+You can run `dbtenv versions` to list the versions of dbt available to install from the [Python Package Index](https://pypi.org/project/dbt/#history), and run `dbtenv install <version>` to install a version.
 
 Notes:
 - The dbt version-specific Python virtual environments are created under `~/.dbt/versions`.
+- You can avoid having to run `dbtenv install <version>` manually by setting a `DBTENV_AUTO_INSTALL` environment variable to `true` or specifying `--auto-install` when running `dbtenv version` or `dbtenv execute`.
 - By default dbtenv uses whichever Python version it was installed with to install dbt, but that can be changed by setting a `DBTENV_PYTHON` environment variable to the path of a different Python executable, or specifying `--python <path>` when running `dbtenv install`.
 
 **Important:**  dbt currently isn't compatible with Python 3.9 or above, so if dbtenv was installed with Python 3.9 or above you will need to specify a compatible Python version to install dbt.
@@ -68,7 +69,7 @@ Some examples:
 
 Tips:
 - After adding such a `dbt` alias/function to your shell profile you'll need to reload the profile to activate it (e.g. `. ~/.bash_profile` in bash, or `. $PROFILE` in PowerShell).
-- For an even more seamless experience use `dbtenv execute --auto-install --` in your alias/function so that any dbt version specified that isn't already installed will be installed automatically.
+- For an even more seamless experience you can set a `DBTENV_AUTO_INSTALL` environment variable to `true` in your shell profile so any dbt version specified that isn't already installed will be installed automatically.
 
 ### Uninstalling dbt versions
 You can run `dbtenv versions --installed` to list the versions of dbt that dbtenv has installed under `~/.dbt/versions`, and then run `dbtenv uninstall <version>` to uninstall a version.
