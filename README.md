@@ -20,6 +20,8 @@ TBD
 
 ## How it works
 
+Run `dbtenv --help` to see some overall documentation for dbtenv, including its available sub-commands, and run `dbtenv <sub-command> --help` to see documentation for that sub-command.
+
 ### Installing dbt versions
 You can run `dbtenv versions` to list the versions of dbt available to install from the [Python Package Index](https://pypi.org/project/dbt/#history), and then run `dbtenv install <version>` to manually install a version, or use dbtenv's auto-install feature by setting a `DBTENV_AUTO_INSTALL` environment variable to `true` or specifying `--auto-install` when running `dbtenv version` or `dbtenv execute`.
 
