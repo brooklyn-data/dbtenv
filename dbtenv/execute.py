@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import sys
 from typing import List
 
@@ -62,12 +63,7 @@ def run_execute_command(parsed_args: argparse.Namespace) -> None:
 
 def execute_dbt(dbt_version: str, args: List[str]) -> None:
     dbt = dbtenv.which.get_dbt(dbt_version)
-    dbt_process_args = [dbt, *args]
     logger.debug(f"Running `{dbt}` with arguments {args}.")
-
-    # Flush any buffered output before replacing this process.
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    # Execute dbt, replacing the current process so things like keyboard interrupts work normally.
-    os.execv(dbt, dbt_process_args)
+    dbt_result = subprocess.run([dbt, *args])
+    if dbt_result.returncode != 0:
+        raise dbtenv.DbtError(dbt_result.returncode)

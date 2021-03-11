@@ -126,11 +126,14 @@ def main(args: List[str] = None) -> None:
             dbtenv.uninstall.run_uninstall_command(parsed_args)
         else:
             raise dbtenv.DbtenvRuntimeError(f"Unknown sub-command `{subcommand}`.")
-    except KeyboardInterrupt:
-        logger.debug("Received keyboard interrupt.")
-        sys.exit(EXIT_CODES.interrupted)
     except dbtenv.DbtenvRuntimeError as error:
         logger.error(error)
         sys.exit(EXIT_CODES.failure)
+    except dbtenv.DbtError as dbt_error:
+        logger.debug(dbt_error)
+        sys.exit(dbt_error.exit_code)
+    except KeyboardInterrupt:
+        logger.debug("Received keyboard interrupt.")
+        sys.exit(EXIT_CODES.interrupted)
 
     sys.exit(EXIT_CODES.success)

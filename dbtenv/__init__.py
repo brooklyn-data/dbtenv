@@ -36,6 +36,12 @@ class DbtenvRuntimeError(RuntimeError):
     pass
 
 
+class DbtError(RuntimeError):
+    def __init__(self, exit_code):
+        super().__init__(f"dbt execution failed with exit code {exit_code}.")
+        self.exit_code = exit_code
+
+
 def get_versions_directory() -> str:
     return os.path.expanduser(VERSIONS_DIRECTORY)
 
