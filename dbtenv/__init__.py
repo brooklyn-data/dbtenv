@@ -22,6 +22,8 @@ AUTO_INSTALL_VAR = 'DBTENV_AUTO_INSTALL'
 DEBUG: Optional[bool] = None
 DEBUG_VAR = 'DBTENV_DEBUG'
 
+TRUE_STRINGS = ('1', 'active', 'enable', 'enabled', 'on', 't', 'true', 'y', 'yes')
+
 LOGGER = logging.getLogger('dbtenv')
 output_handler = logging.StreamHandler()
 output_handler.setFormatter(logging.Formatter('{name} {levelname}:  {message}', style='{'))
@@ -105,7 +107,7 @@ def set_debug(debug: bool) -> None:
 
 
 def string_is_true(string: str) -> bool:
-    return isinstance(string, str) and string.strip().lower() in ('1', 't', 'true', 'y', 'yes')
+    return isinstance(string, str) and string.strip().lower() in TRUE_STRINGS
 
 
 # Enable debug logging during initialization if it's configured.
