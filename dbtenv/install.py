@@ -64,7 +64,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
     python = dbtenv.get_python()
     _check_python_compatibility(python)
 
-    logger.debug(f"Creating virtual environment in `{dbt_version_dir}` using `{python}`.")
+    logger.info(f"Creating virtual environment in `{dbt_version_dir}` using `{python}`.")
     venv_result = subprocess.run([python, '-m' 'venv', '--clear', dbt_version_dir])
     if venv_result.returncode != 0:
         raise dbtenv.DbtenvError(f"Failed to create virtual environment in `{dbt_version_dir}`.")
