@@ -70,7 +70,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         raise dbtenv.DbtenvError(f"Failed to create virtual environment in `{dbt_version_dir}`.")
 
     pip = _find_pip(dbt_version_dir)
-    pip_args = ['install', '--pre', '--no-cache-dir', '--disable-pip-version-check']
+    pip_args = ['install', '--pre', '--disable-pip-version-check']
     if package_location:
         package_source = f"`{package_location}`"
         if editable:
