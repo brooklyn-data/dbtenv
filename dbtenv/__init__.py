@@ -19,6 +19,9 @@ PYTHON_VAR = 'DBTENV_PYTHON'
 AUTO_INSTALL: Optional[bool] = None
 AUTO_INSTALL_VAR = 'DBTENV_AUTO_INSTALL'
 
+SIMULATE_RELEASE_DATE: Optional[bool] = None
+SIMULATE_RELEASE_DATE_VAR = 'DBTENV_SIMULATE_RELEASE_DATE'
+
 DEBUG: Optional[bool] = None
 DEBUG_VAR = 'DBTENV_DEBUG'
 
@@ -90,6 +93,19 @@ def get_auto_install() -> bool:
 def set_auto_install(auto_install: bool) -> None:
     global AUTO_INSTALL
     AUTO_INSTALL = auto_install
+
+
+def get_simulate_release_date() -> bool:
+    if SIMULATE_RELEASE_DATE is not None:
+        return SIMULATE_RELEASE_DATE
+    if SIMULATE_RELEASE_DATE_VAR in os.environ:
+        return string_is_true(os.environ[SIMULATE_RELEASE_DATE_VAR])
+    return False
+
+
+def set_simulate_release_date(simulate_release_date: bool) -> None:
+    global SIMULATE_RELEASE_DATE
+    SIMULATE_RELEASE_DATE = simulate_release_date
 
 
 def get_debug() -> bool:

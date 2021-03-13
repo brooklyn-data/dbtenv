@@ -33,14 +33,24 @@ def build_args_parser() -> argparse.ArgumentParser:
         epilog="Run a sub-command with the --help option to see help for that sub-command."
     )
 
-    python_arg_parser = argparse.ArgumentParser(add_help=False)
-    python_arg_parser.add_argument(
+    common_install_args_parser = argparse.ArgumentParser(add_help=False)
+    common_install_args_parser.add_argument(
         '--python',
         metavar='<path>',
         help=f"""
             Path to the Python executable to use when installing dbt.
             The default is the Python executable used to install dbtenv, but that can be overridden by setting a
             {dbtenv.PYTHON_VAR} environment variable.
+        """
+    )
+    common_install_args_parser.add_argument(
+        '--simulate-release-date',
+        action='store_const',
+        const=True,
+        help=f"""
+            Only install Python packages that were available on the date the dbt version was released.
+            The default is to not simulate the dbt release date, but that can be overridden by setting a
+            {dbtenv.SIMULATE_RELEASE_DATE_VAR} environment variable.
         """
     )
 
@@ -58,10 +68,10 @@ def build_args_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
     dbtenv.versions.build_versions_args_parser(subparsers, [common_subcommand_args_parser])
-    dbtenv.install.build_install_args_parser(subparsers, [common_subcommand_args_parser, python_arg_parser])
-    dbtenv.version.build_version_args_parser(subparsers, [common_subcommand_args_parser, python_arg_parser, auto_install_arg_parser])
+    dbtenv.install.build_install_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
+    dbtenv.version.build_version_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser, auto_install_arg_parser])
     dbtenv.which.build_which_args_parser(subparsers, [common_subcommand_args_parser])
-    dbtenv.execute.build_execute_args_parser(subparsers, [common_subcommand_args_parser, python_arg_parser, auto_install_arg_parser])
+    dbtenv.execute.build_execute_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser, auto_install_arg_parser])
     dbtenv.uninstall.build_uninstall_args_parser(subparsers, [common_subcommand_args_parser])
 
     return parser
@@ -104,6 +114,10 @@ def main(args: List[str] = None) -> None:
         auto_install = parsed_args.auto_install if 'auto_install' in parsed_args else None
         if auto_install:
             dbtenv.set_auto_install(auto_install)
+
+        simulate_release_date = parsed_args.simulate_release_date if 'simulate_release_date' in parsed_args else None
+        if simulate_release_date:
+            dbtenv.set_simulate_release_date(simulate_release_date)
 
         logger.debug(f"Parsed arguments = {parsed_args}")
 

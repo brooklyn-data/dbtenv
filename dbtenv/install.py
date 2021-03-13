@@ -1,9 +1,14 @@
 import argparse
+import http
+import http.server
+import json
 import os
 import os.path
 import re
 import subprocess
-from typing import List, Optional
+import threading
+from typing import List, Optional, Union
+import urllib.request
 
 import dbtenv
 
@@ -78,8 +83,18 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         pip_args.append(package_location)
     else:
         package_source = "the Python Package Index"
+        if dbtenv.get_simulate_release_date():
+            dbt_release_date = _get_dbt_release_date(dbt_version)
+            logger.info(f"Simulating release date {dbt_release_date} for dbt {dbt_version}.")
+            class DateFilterPyPIRequestHandler(BaseDateFilterPyPIRequestHandler):
+                date = dbt_release_date
+            pip_filter_server = http.server.HTTPServer(('', 0), DateFilterPyPIRequestHandler)
+            pip_filter_port = pip_filter_server.socket.getsockname()[1]
+            threading.Thread(target=pip_filter_server.serve_forever, daemon=True).start()
+            pip_args.extend(['--index-url', f'http://localhost:{pip_filter_port}/simple'])
         pip_args.append(f'dbt=={dbt_version}')
     logger.info(f"Installing dbt {dbt_version} from {package_source} into `{dbt_version_dir}`.")
+
     logger.debug(f"Running `{pip}` with arguments {pip_args}.")
     pip_result = subprocess.run([pip, *pip_args])
     if pip_result.returncode != 0:
@@ -126,3 +141,70 @@ def _find_pip(venv_path: str) -> str:
             return pip_path
 
     raise dbtenv.DbtenvError(f"No pip executable found in `{venv_path}`.")
+
+
+def _get_dbt_release_date(dbt_version: str) -> str:
+    with urllib.request.urlopen(dbtenv.DBT_PACKAGE_JSON_URL) as package_response:
+        package_data = json.load(package_response)
+    return package_data['releases'][dbt_version][0]['upload_time'][:10]
+
+
+class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
+    # self.date needs to be defined when this class is subclassed (we can't pass the date to use via a constructor
+    # argument because the HTTPServer code instantiates request handlers in a very specific way).
+
+    def do_GET(self) -> None:
+        logger.debug(f"Handling pypi.org request:  {self.requestline}")
+        package_match = re.search(r'^/simple/([^/]+)', self.path)
+
+        passthrough_request_headers = {
+            header: value
+            for header, value in self.headers.items()
+            if header in ('User-Agent', 'Accept', 'Cache-Control')
+        }
+        pypi_request = urllib.request.Request(f'https://pypi.org{self.path}', headers=passthrough_request_headers)
+        with urllib.request.urlopen(pypi_request) as pypi_response:
+            pypi_response_status = pypi_response.status
+            pypi_response_headers = pypi_response.headers
+            pypi_response_body = pypi_response.read()
+
+        if (pypi_response_status != http.HTTPStatus.OK or not package_match):
+            logger.debug(f"Passing through pypi.org {pypi_response_status} response for {self.path}.")
+            self.send_response(pypi_response_status)
+            for header, value in pypi_response_headers.items():
+                self.send_header(header, value)
+            self.end_headers()
+            self.wfile.write(pypi_response_body)
+            return
+
+        package = package_match[1]
+        with urllib.request.urlopen(f"https://pypi.org/pypi/{package}/json") as package_response:
+            package_data = json.load(package_response)
+        excluded_file_names = set(
+            file['filename']
+            for files in package_data['releases'].values()
+            for file in files
+            if file['upload_time'][:10] > self.date
+        )
+        excluded_file_link_count = 0
+        def exclude_file_links(link_match: re.Match) -> str:
+            nonlocal excluded_file_link_count
+            if link_match[1].strip() in excluded_file_names:
+                excluded_file_link_count += 1
+                return ''
+            else:
+                return link_match[0]
+        modified_response_body = re.sub(r'<a href=[^>]+>([^<]+)</a>', exclude_file_links, pypi_response_body.decode('utf-8')).encode('utf-8')
+        logger.debug(f"Excluded {excluded_file_link_count} files for {package} after {self.date}.")
+
+        self.send_response(pypi_response_status)
+        for header, value in pypi_response_headers.items():
+            if header != 'Content-Length':
+                self.send_header(header, value)
+        self.send_header('Content-Length', len(modified_response_body))
+        self.end_headers()
+        self.wfile.write(modified_response_body)
+
+    def log_request(self, code: Union[int, str] = '-', size: Union[int, str] = '-') -> None:
+        # We're already logging requests in do_GET(), so don't log them again here.
+        pass
