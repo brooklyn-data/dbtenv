@@ -92,6 +92,9 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
             pip_filter_port = pip_filter_server.socket.getsockname()[1]
             threading.Thread(target=pip_filter_server.serve_forever, daemon=True).start()
             pip_args.extend(['--index-url', f'http://localhost:{pip_filter_port}/simple'])
+        else:
+            # agate 1.6.2 introduced a dependency on PyICU which causes installation problems, so exclude that.
+            pip_args.append('agate>=1.6,<1.6.2')
         pip_args.append(f'dbt=={dbt_version}')
     logger.info(f"Installing dbt {dbt_version} from {package_source} into `{dbt_version_dir}`.")
 
