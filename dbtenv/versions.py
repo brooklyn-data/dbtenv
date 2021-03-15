@@ -50,11 +50,11 @@ def run_versions_command(parsed_args: argparse.Namespace) -> None:
             else:
                 print(f"  {version}")
     else:
-        logger.info(f"No dbt installations found in `{dbtenv.get_versions_directory()}`.")
+        logger.info(f"No dbt installations found in `{dbtenv.VERSIONS_DIRECTORY_PATH}`.")
 
 
 def get_installed_dbt_versions() -> List[str]:
-    return [entry.name for entry in os.scandir(dbtenv.get_versions_directory()) if dbtenv.which.try_get_dbt(entry.name)]
+    return [entry.name for entry in os.scandir(dbtenv.VERSIONS_DIRECTORY_PATH) if dbtenv.which.try_get_dbt(entry.name)]
 
 
 def get_dbt_package_versions() -> List[str]:

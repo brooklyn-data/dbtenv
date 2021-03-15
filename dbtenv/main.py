@@ -105,19 +105,19 @@ def main(args: List[str] = None) -> None:
 
         debug = parsed_args.debug or ('subcommand_debug' in parsed_args and parsed_args.subcommand_debug)
         if debug:
-            dbtenv.set_debug(debug)
+            dbtenv.CONFIG.debug = debug
 
         python = parsed_args.python if 'python' in parsed_args else None
         if python:
-            dbtenv.set_python(python)
+            dbtenv.CONFIG.python = python
 
         auto_install = parsed_args.auto_install if 'auto_install' in parsed_args else None
         if auto_install:
-            dbtenv.set_auto_install(auto_install)
+            dbtenv.CONFIG.auto_install = auto_install
 
         simulate_release_date = parsed_args.simulate_release_date if 'simulate_release_date' in parsed_args else None
         if simulate_release_date:
-            dbtenv.set_simulate_release_date(simulate_release_date)
+            dbtenv.CONFIG.simulate_release_date = simulate_release_date
 
         logger.debug(f"Parsed arguments = {parsed_args}")
 

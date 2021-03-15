@@ -37,7 +37,7 @@ def run_uninstall_command(parsed_args: argparse.Namespace) -> None:
 def uninstall(dbt_version: str, force: bool = False) -> None:
     dbt_version_dir = dbtenv.get_version_directory(dbt_version)
     if not os.path.isdir(dbt_version_dir):
-        raise dbtenv.DbtenvError(f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}`.")
+        raise dbtenv.DbtenvError(f"No dbt {dbt_version} installation found in `{dbtenv.VERSIONS_DIRECTORY_PATH}`.")
 
     if force or dbtenv.string_is_true(input(f"Uninstall dbt {dbt_version} from `{dbt_version_dir}`? ")):
         shutil.rmtree(dbt_version_dir)

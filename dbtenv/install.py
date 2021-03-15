@@ -66,7 +66,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         else:
             raise dbtenv.DbtenvError(f"`{dbt_version_dir}` already exists.  Specify --force to overwrite it.")
 
-    python = dbtenv.get_python()
+    python = dbtenv.CONFIG.python
     _check_python_compatibility(python)
 
     logger.info(f"Creating virtual environment in `{dbt_version_dir}` using `{python}`.")
@@ -83,7 +83,7 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
         pip_args.append(package_location)
     else:
         package_source = "the Python Package Index"
-        if dbtenv.get_simulate_release_date():
+        if dbtenv.CONFIG.simulate_release_date:
             dbt_release_date = _get_dbt_release_date(dbt_version)
             logger.info(f"Simulating release date {dbt_release_date} for dbt {dbt_version}.")
             class DateFilterPyPIRequestHandler(BaseDateFilterPyPIRequestHandler):
@@ -108,11 +108,11 @@ def install(dbt_version: str, force: bool = False, package_location: Optional[st
 
 def ensure_dbt_version_installed(dbt_version: str) -> None:
     if not os.path.isdir(dbtenv.get_version_directory(dbt_version)):
-        if dbtenv.get_auto_install():
+        if dbtenv.CONFIG.auto_install:
             install(dbt_version)
         else:
             raise dbtenv.DbtenvError(
-                f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}` and auto-install is not enabled."
+                f"No dbt {dbt_version} installation found in `{dbtenv.VERSIONS_DIRECTORY_PATH}` and auto-install is not enabled."
             )
 
 

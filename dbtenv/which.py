@@ -51,7 +51,7 @@ def run_which_command(parsed_args: argparse.Namespace) -> None:
 def get_dbt(dbt_version: str) -> str:
     dbt_version_dir = dbtenv.get_version_directory(dbt_version)
     if not os.path.isdir(dbt_version_dir):
-        raise dbtenv.DbtenvError(f"No dbt {dbt_version} installation found in `{dbtenv.get_versions_directory()}`.")
+        raise dbtenv.DbtenvError(f"No dbt {dbt_version} installation found in `{dbtenv.VERSIONS_DIRECTORY_PATH}`.")
 
     for possible_dbt_subpath_parts in [['bin', 'dbt'], ['Scripts', 'dbt.exe']]:
         dbt_path = os.path.join(dbt_version_dir, *possible_dbt_subpath_parts)

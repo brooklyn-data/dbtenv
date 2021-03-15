@@ -92,24 +92,22 @@ def get_version(working_directory: str) -> Tuple[Optional[str], Optional[str]]:
 
     global_version = get_global_version()
     if global_version:
-        return global_version, f"`{dbtenv.get_global_version_file()}`"
+        return global_version, f"`{dbtenv.GLOBAL_VERSION_FILE_PATH}`"
 
     return None, None
 
 
 def get_global_version() -> Optional[str]:
-    global_version_file = dbtenv.get_global_version_file()
-    if os.path.isfile(global_version_file):
-        return _read_file_line(global_version_file)
+    if os.path.isfile(dbtenv.GLOBAL_VERSION_FILE_PATH):
+        return _read_file_line(dbtenv.GLOBAL_VERSION_FILE_PATH)
 
     return None
 
 
 def set_global_version(dbt_version: str) -> None:
     dbtenv.install.ensure_dbt_version_installed(dbt_version)
-    version_file = dbtenv.get_global_version_file()
-    _write_file_line(version_file, dbt_version)
-    logger.info(f"{dbt_version} is now set as the global dbt version in `{version_file}`.")
+    _write_file_line(dbtenv.GLOBAL_VERSION_FILE_PATH, dbt_version)
+    logger.info(f"{dbt_version} is now set as the global dbt version in `{dbtenv.GLOBAL_VERSION_FILE_PATH}`.")
 
 
 def get_local_version(working_directory: str) -> Tuple[Optional[str], Optional[str]]:
