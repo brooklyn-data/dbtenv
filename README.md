@@ -1,6 +1,6 @@
 # dbtenv
 
-dbtenv lets you easily install and run multiple versions of [dbt](https://docs.getdbt.com/docs/introduction) using pip with [Python virtual environments](https://docs.python.org/3/library/venv.html), or optionally using [Homebrew](https://brew.sh/) on Mac or Linux.
+dbtenv lets you easily install and run multiple versions of [dbt](https://docs.getdbt.com/docs/introduction) using [pip](https://pip.pypa.io/) with [Python virtual environments](https://docs.python.org/3/library/venv.html), or optionally using [Homebrew](https://brew.sh/) on Mac or Linux.
 
 ### Table of contents
 - **[Installation](#installation)**
@@ -25,9 +25,9 @@ Run `pip3 install git+https://github.com/brooklyn-data/dbtenv#egg=dbtenv`.
 Run `dbtenv --help` to see some overall documentation for dbtenv, including its available sub-commands, and run `dbtenv <sub-command> --help` to see documentation for that sub-command.
 
 ### Using pip and/or Homebrew
-By default dbtenv uses pip to install dbt versions from the [Python Package Index](https://pypi.org/project/dbt/#history) into Python virtual environments within `~/.dbt/versions`.
+By default dbtenv uses [pip](https://pip.pypa.io/) to install dbt versions from the [Python Package Index](https://pypi.org/project/dbt/#history) into Python virtual environments within `~/.dbt/versions`.
 
-However, on Mac or Linux systems dbtenv will automatically detect and use any version-specific dbt installations from [Homebrew](https://brew.sh/) (e.g. `dbt@0.19.0`), and you can have dbtenv use Homebrew to install new dbt versions by setting a `DBTENV_DEFAULT_INSTALLER=homebrew` environment variable, or specifying `--installer homebrew` when running `dbtenv install`.
+However, on Mac or Linux systems dbtenv will automatically detect and use any version-specific dbt installations from [Homebrew](https://brew.sh/) (e.g. `dbt@0.19.0` but not plain `dbt`), and you can have dbtenv use Homebrew to install new dbt versions by setting a `DBTENV_DEFAULT_INSTALLER=homebrew` environment variable, or specifying `--installer homebrew` when running `dbtenv install`.
 
 ### Installing dbt versions
 You can run `dbtenv versions` to list the versions of dbt available to install, and run `dbtenv install <version>` to install a version.
@@ -36,7 +36,7 @@ If you don't want to have to run `dbtenv install <version>` manually, you can se
 
 Some tips when dbtenv is using pip:
 - You can have dbtenv only install Python packages that were actually available on the date the dbt version was released by setting a `DBTENV_SIMULATE_RELEASE_DATE=true` environment variable, or specifying `--simulate-release-date` when running `dbtenv install`.
-This can help if newer versions of dbt's dependencies are causing installation problems.
+  This can help if newer versions of dbt's dependencies are causing installation problems.
 - By default dbtenv uses whichever Python version it was installed with to install dbt, but that can be changed by setting a `DBTENV_PYTHON` environment variable to the path of a different Python executable, or specifying `--python <path>` when running `dbtenv install`.
   - **dbt currently isn't compatible with Python 3.9 or above**, so if dbtenv was installed with Python 3.9 or above you will need to specify a compatible Python version to install dbt.
 
@@ -52,6 +52,7 @@ You can:
 - Run `dbtenv version --global <version>` to set the dbt version globally in the `~/.dbt/version` file.
 - Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file.
 - Run `dbtenv version` to show which dbt version dbtenv determines dynamically based on the current environment.
+- Run `dbtenv which` to show the full path to the executable of the dbt version dbtenv determines dynamically based on the current environment.
 
 ### Running dbt versions
 Run `dbtenv execute -- <dbt arguments>` to execute the dbt version determined dynamically based on the current environment, or run `dbtenv execute --dbt <version> -- <dbt arguments>` to execute the specified dbt version.
@@ -75,7 +76,7 @@ Some examples:
   function dbt { dbtenv execute -- @Args }
   ```
 
-Note that after adding such a `dbt` alias/function to your shell profile you'll need to reload the profile to activate it (e.g. `. ~/.bash_profile` in bash, or `. $PROFILE` in PowerShell).
+Note that after adding such a `dbt` alias/function to your shell profile you'll need to reload the profile to activate it (e.g. by running `. ~/.bash_profile` in bash, or `. $PROFILE` in PowerShell).
 
 ### Uninstalling dbt versions
 You can run `dbtenv versions --installed` to list the versions of dbt that dbtenv has installed under `~/.dbt/versions` and/or with Homebrew, and then run `dbtenv uninstall <version>` to uninstall a version.
@@ -86,4 +87,4 @@ You can run `dbtenv versions --installed` to list the versions of dbt that dbten
 ### Development setup
 1. Clone this repository onto your computer.
 2. If you want to isolate the dbtenv development setup (e.g. because you have dbtenv installed normally), create and activate a [Python virtual environment](https://docs.python.org/3/library/venv.html).
-3. Run `pip install --editable <path to cloned repo>`.
+3. Run `pip3 install --editable <path to cloned repo>`.
