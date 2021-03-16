@@ -1,5 +1,5 @@
 import argparse
-from collections import namedtuple
+from enum import IntEnum
 import sys
 from typing import List
 
@@ -12,9 +12,13 @@ import dbtenv.versions
 import dbtenv.which
 
 
-EXIT_CODES = namedtuple('ExitCodes', 'success failure interrupted')(success=0, failure=1, interrupted=2)
-
 logger = dbtenv.LOGGER
+
+
+class ExitCode(IntEnum):
+    SUCCESS = 0
+    FAILURE = 1
+    INTERRUPTED = 2
 
 
 def build_args_parser() -> argparse.ArgumentParser:
@@ -23,8 +27,9 @@ def build_args_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         description=f"""
-            Lets you easily install and switch between multiple versions of dbt in dedicated Python virtual environments.
-            The dbt version-specific Python virtual environments are created under `{dbtenv.VERSIONS_DIRECTORY}`.
+            Lets you easily install and switch between multiple versions of dbt using pip with Python virtual environments,
+            or optionally using Homebrew on Mac or Linux.
+            Any dbt version-specific Python virtual environments are created under `{dbtenv.VENVS_DIRECTORY}`.
             The dbt version to use can be configured globally in a `{dbtenv.GLOBAL_VERSION_FILE}` file, locally within
             specific directories using `{dbtenv.LOCAL_VERSION_FILE}` files, or in your shell using a
             {dbtenv.DBT_VERSION_VAR} environment variable.
@@ -38,7 +43,7 @@ def build_args_parser() -> argparse.ArgumentParser:
         '--python',
         metavar='<path>',
         help=f"""
-            Path to the Python executable to use when installing dbt.
+            Path to the Python executable to use when installing using pip.
             The default is the Python executable used to install dbtenv, but that can be overridden by setting a
             {dbtenv.PYTHON_VAR} environment variable.
         """
@@ -48,7 +53,7 @@ def build_args_parser() -> argparse.ArgumentParser:
         action='store_const',
         const=True,
         help=f"""
-            Only install Python packages that were available on the date the dbt version was released.
+            When installing using pip, only install packages that were available on the date the dbt version was released.
             The default is to not simulate the dbt release date, but that can be overridden by setting a
             {dbtenv.SIMULATE_RELEASE_DATE_VAR} environment variable.
         """
@@ -90,6 +95,17 @@ def _build_common_args_parser(dest_prefix: str = '') -> argparse.ArgumentParser:
             environment variable.
         """
     )
+    if dbtenv.ENV.homebrew_installed:
+        parser.add_argument(
+            '--installer',
+            dest=f'{dest_prefix}installer',
+            type=dbtenv.Installer,
+            choices=dbtenv.Installer,
+            help=f"""
+                Which installer to use.
+                The default is pip, but that can be overridden by setting a {dbtenv.DEFAULT_INSTALLER_VAR} environment variable.
+            """
+        )
     return parser
 
 
@@ -100,31 +116,36 @@ def main(args: List[str] = None) -> None:
 
         logger.debug(f"Arguments = {args}")
 
+        parsed_args = dbtenv.Args()
         args_parser = build_args_parser()
-        parsed_args = args_parser.parse_args(args)
+        args_parser.parse_args(args, namespace=parsed_args)
 
-        debug = parsed_args.debug or ('subcommand_debug' in parsed_args and parsed_args.subcommand_debug)
+        debug = parsed_args.debug or parsed_args.get('subcommand_debug')
         if debug:
-            dbtenv.CONFIG.debug = debug
+            dbtenv.ENV.debug = debug
 
-        python = parsed_args.python if 'python' in parsed_args else None
+        installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
+        if installer:
+            dbtenv.ENV.installer = installer
+
+        python = parsed_args.get('python')
         if python:
-            dbtenv.CONFIG.python = python
+            dbtenv.ENV.python = python
 
-        auto_install = parsed_args.auto_install if 'auto_install' in parsed_args else None
+        auto_install = parsed_args.get('auto_install')
         if auto_install:
-            dbtenv.CONFIG.auto_install = auto_install
+            dbtenv.ENV.auto_install = auto_install
 
-        simulate_release_date = parsed_args.simulate_release_date if 'simulate_release_date' in parsed_args else None
+        simulate_release_date = parsed_args.get('simulate_release_date')
         if simulate_release_date:
-            dbtenv.CONFIG.simulate_release_date = simulate_release_date
+            dbtenv.ENV.simulate_release_date = simulate_release_date
 
         logger.debug(f"Parsed arguments = {parsed_args}")
 
         subcommand = parsed_args.subcommand
         if not subcommand:
             args_parser.print_help()
-            sys.exit(EXIT_CODES.failure)
+            sys.exit(ExitCode.FAILURE)
 
         if subcommand == 'versions':
             dbtenv.versions.run_versions_command(parsed_args)
@@ -142,12 +163,12 @@ def main(args: List[str] = None) -> None:
             raise dbtenv.DbtenvError(f"Unknown sub-command `{subcommand}`.")
     except dbtenv.DbtenvError as error:
         logger.error(error)
-        sys.exit(EXIT_CODES.failure)
+        sys.exit(ExitCode.FAILURE)
     except dbtenv.DbtError as dbt_error:
         logger.debug(dbt_error)
         sys.exit(dbt_error.exit_code)
     except KeyboardInterrupt:
         logger.debug("Received keyboard interrupt.")
-        sys.exit(EXIT_CODES.interrupted)
+        sys.exit(ExitCode.INTERRUPTED)
 
-    sys.exit(EXIT_CODES.success)
+    sys.exit(ExitCode.SUCCESS)

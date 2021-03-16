@@ -26,6 +26,7 @@ def build_version_args_parser(subparsers: argparse._SubParsersAction, parent_par
         '--global',
         dest='global_dbt_version',
         nargs='?',
+        type=dbtenv.Version,
         const='',
         metavar='<dbt_version>',
         help=f"Show/set the dbt version globally using the `{dbtenv.GLOBAL_VERSION_FILE}` file."
@@ -34,6 +35,7 @@ def build_version_args_parser(subparsers: argparse._SubParsersAction, parent_par
         '--local',
         dest='local_dbt_version',
         nargs='?',
+        type=dbtenv.Version,
         const='',
         metavar='<dbt_version>',
         help=f"Show/set the dbt version for the local directory using `{dbtenv.LOCAL_VERSION_FILE}` files."
@@ -47,27 +49,27 @@ def build_version_args_parser(subparsers: argparse._SubParsersAction, parent_par
     )
 
 
-def run_version_command(parsed_args: argparse.Namespace) -> None:
-    if parsed_args.global_dbt_version is not None:
-        if parsed_args.global_dbt_version:
-            set_global_version(parsed_args.global_dbt_version)
+def run_version_command(args: dbtenv.Args) -> None:
+    if args.global_dbt_version is not None:
+        if args.global_dbt_version:
+            set_global_version(args.global_dbt_version)
         else:
             global_version = get_global_version()
             if global_version:
                 print(global_version)
             else:
                 logger.info("No global dbt version has been set.")
-    elif parsed_args.local_dbt_version is not None:
+    elif args.local_dbt_version is not None:
         working_dir = os.getcwd()
-        if parsed_args.local_dbt_version:
-            set_local_version(working_dir, parsed_args.local_dbt_version)
+        if args.local_dbt_version:
+            set_local_version(working_dir, args.local_dbt_version)
         else:
             local_version, version_file = get_local_version(working_dir)
             if local_version:
                 print(f"{local_version}  (set by `{version_file}`)")
             else:
                 logger.info(f"No local dbt version has been set for `{working_dir}` using `{dbtenv.LOCAL_VERSION_FILE}` files.")
-    elif parsed_args.shell_dbt_version is not None:
+    elif args.shell_dbt_version is not None:
         shell_version = get_shell_version()
         if shell_version:
             print(shell_version)
@@ -81,7 +83,7 @@ def run_version_command(parsed_args: argparse.Namespace) -> None:
             logger.info("No dbt version has been set globally, for the local directory, or for the current shell.")
 
 
-def get_version(working_directory: str) -> Tuple[Optional[str], Optional[str]]:
+def get_version(working_directory: str) -> Tuple[Optional[dbtenv.Version], Optional[str]]:
     shell_version = get_shell_version()
     if shell_version:
         return shell_version, f"{dbtenv.DBT_VERSION_VAR} environment variable"
@@ -92,30 +94,30 @@ def get_version(working_directory: str) -> Tuple[Optional[str], Optional[str]]:
 
     global_version = get_global_version()
     if global_version:
-        return global_version, f"`{dbtenv.GLOBAL_VERSION_FILE_PATH}`"
+        return global_version, f"`{dbtenv.ENV.global_version_file}`"
 
     return None, None
 
 
-def get_global_version() -> Optional[str]:
-    if os.path.isfile(dbtenv.GLOBAL_VERSION_FILE_PATH):
-        return _read_file_line(dbtenv.GLOBAL_VERSION_FILE_PATH)
+def get_global_version() -> Optional[dbtenv.Version]:
+    if os.path.isfile(dbtenv.ENV.global_version_file):
+        return _read_version_file(dbtenv.ENV.global_version_file)
 
     return None
 
 
-def set_global_version(dbt_version: str) -> None:
+def set_global_version(dbt_version: dbtenv.Version) -> None:
     dbtenv.install.ensure_dbt_version_installed(dbt_version)
-    _write_file_line(dbtenv.GLOBAL_VERSION_FILE_PATH, dbt_version)
-    logger.info(f"{dbt_version} is now set as the global dbt version in `{dbtenv.GLOBAL_VERSION_FILE_PATH}`.")
+    _write_version_file(dbtenv.ENV.global_version_file, dbt_version)
+    logger.info(f"{dbt_version} is now set as the global dbt version in `{dbtenv.ENV.global_version_file}`.")
 
 
-def get_local_version(working_directory: str) -> Tuple[Optional[str], Optional[str]]:
+def get_local_version(working_directory: str) -> Tuple[Optional[dbtenv.Version], Optional[str]]:
     search_dir = working_directory
     while True:
         version_file = os.path.join(search_dir, dbtenv.LOCAL_VERSION_FILE)
         if os.path.isfile(version_file):
-            version = _read_file_line(version_file)
+            version = _read_version_file(version_file)
             return version, version_file
 
         parent_dir = os.path.dirname(search_dir)
@@ -127,25 +129,25 @@ def get_local_version(working_directory: str) -> Tuple[Optional[str], Optional[s
     return None, None
 
 
-def set_local_version(working_directory: str, dbt_version: str) -> None:
+def set_local_version(working_directory: str, dbt_version: dbtenv.Version) -> None:
     dbtenv.install.ensure_dbt_version_installed(dbt_version)
     version_file = os.path.join(working_directory, dbtenv.LOCAL_VERSION_FILE)
-    _write_file_line(version_file, dbt_version)
+    _write_version_file(version_file, dbt_version)
     logger.info(f"{dbt_version} is now set as the local dbt version in `{version_file}`.")
 
 
-def get_shell_version() -> Optional[str]:
+def get_shell_version() -> Optional[dbtenv.Version]:
     if dbtenv.DBT_VERSION_VAR in os.environ:
-        return os.environ[dbtenv.DBT_VERSION_VAR]
+        return dbtenv.Version(os.environ[dbtenv.DBT_VERSION_VAR])
 
     return None
 
 
-def _read_file_line(file_path: str) -> str:
+def _read_version_file(file_path: str) -> dbtenv.Version:
     with open(file_path, 'r') as file:
-        return file.readline().strip()
+        return dbtenv.Version(file.readline().strip())
 
 
-def _write_file_line(file_path: str, line: str) -> None:
+def _write_version_file(file_path: str, version: dbtenv.Version) -> None:
     with open(file_path, 'w') as file:
-        file.write(line)
+        file.write(str(version))
