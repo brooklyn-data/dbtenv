@@ -82,6 +82,26 @@ class Version(distutils.version.LooseVersion):
     def __repr__(self) -> str:
         return f"Version('{self.raw_version}')"
 
+    def _cmp(self, other: Any) -> int:
+        # Comparing standard integer-based versions to non-standard text versions will raise a TypeError.
+        # In such cases we'll fall back to comparing the entire version strings rather than the individual parts.
+        try:
+            return super()._cmp(other)
+        except:
+            if isinstance(other, str):
+                return self._str_cmp(other)
+            if isinstance(other, Version):
+                return self._str_cmp(other.pypi_version)
+            raise
+
+    def _str_cmp(self, other: str) -> int:
+        if self.pypi_version == other:
+            return 0
+        if self.pypi_version < other:
+            return -1
+        if self.pypi_version > other:
+            return 1
+
     def get_installer_version(self, installer: Installer) -> str:
         if installer == Installer.PIP:
             return self.pypi_version
