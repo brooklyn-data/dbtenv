@@ -180,7 +180,7 @@ def _check_python_compatibility(python: str) -> None:
     python_major_version = int(python_version_match[1])
     python_minor_version = int(python_version_match[2])
 
-    if python_major_version == 3 and python_minor_version >= 9:
+    if (python_major_version, python_minor_version) >= (3, 9):
         raise dbtenv.DbtenvError(
             f"Python {python_version} is being used, but dbt currently isn't compatible with Python 3.9 or above."
         )
