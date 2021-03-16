@@ -188,8 +188,9 @@ class Environment:
         else:
             # If dbtenv is installed in a virtual environment use the base Python installation's executable.
             base_exec_path = sys.base_exec_prefix
-            for possible_python_subpath_parts in [['bin', 'python3'], ['bin', 'python'], ['python.exe']]:
-                python_path = os.path.join(base_exec_path, *possible_python_subpath_parts)
+            possible_python_subpaths = ['python.exe'] if self.os == 'Windows' else ['bin/python3', 'bin/python']
+            for possible_python_subpath in possible_python_subpaths:
+                python_path = os.path.join(base_exec_path, possible_python_subpath)
                 if os.path.isfile(python_path):
                     logger.debug(f"Found Python executable `{python_path}`.")
                     self._python = python_path

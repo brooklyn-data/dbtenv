@@ -63,11 +63,11 @@ def get_venv_dbt(dbt_version: dbtenv.Version) -> str:
     if not os.path.isdir(venv_dir):
         raise dbtenv.DbtenvError(f"No dbt {dbt_version} installation found in `{venv_dir}`.")
 
-    for possible_dbt_subpath_parts in [['bin', 'dbt'], ['Scripts', 'dbt.exe']]:
-        dbt_path = os.path.join(venv_dir, *possible_dbt_subpath_parts)
-        if os.path.isfile(dbt_path):
-            logger.debug(f"Found dbt executable `{dbt_path}`.")
-            return dbt_path
+    dbt_subpath = 'Scripts\\dbt.exe' if dbtenv.ENV.os == 'Windows' else 'bin/dbt'
+    dbt_path = os.path.join(venv_dir, dbt_subpath)
+    if os.path.isfile(dbt_path):
+        logger.debug(f"Found dbt executable `{dbt_path}`.")
+        return dbt_path
 
     raise dbtenv.DbtenvError(f"No dbt executable found in `{venv_dir}`.")
 

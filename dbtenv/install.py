@@ -189,11 +189,11 @@ def _check_python_compatibility(python: str) -> None:
 
 
 def _find_pip(venv_directory: str) -> str:
-    for possible_pip_subpath_parts in [['bin', 'pip'], ['Scripts', 'pip.exe']]:
-        pip_path = os.path.join(venv_directory, *possible_pip_subpath_parts)
-        if os.path.isfile(pip_path):
-            logger.debug(f"Found pip executable `{pip_path}`.")
-            return pip_path
+    pip_subpath = 'Scripts\\pip.exe' if dbtenv.ENV.os == 'Windows' else 'bin/pip'
+    pip_path = os.path.join(venv_directory, pip_subpath)
+    if os.path.isfile(pip_path):
+        logger.debug(f"Found pip executable `{pip_path}`.")
+        return pip_path
 
     raise dbtenv.DbtenvError(f"No pip executable found in `{venv_directory}`.")
 
