@@ -90,7 +90,7 @@ def venv_install(dbt_version: dbtenv.Version, force: bool = False, package_locat
             raise dbtenv.DbtenvError(f"`{venv_dir}` already exists.  Specify --force to overwrite it.")
 
     python = dbtenv.ENV.python
-    _check_python_compatibility(python)
+    _check_python_compatibility(dbt_version, python)
 
     logger.info(f"Creating virtual environment in `{venv_dir}` using `{python}`.")
     venv_result = subprocess.run([python, '-m' 'venv', '--clear', venv_dir])
@@ -168,21 +168,23 @@ def get_pypi_package_metadata(package: str) -> str:
         return json.load(package_json_response)
 
 
-def _check_python_compatibility(python: str) -> None:
+def _check_python_compatibility(dbt_version: dbtenv.Version, python: str) -> None:
     python_version_result = subprocess.run([python, '--version'], stdout=subprocess.PIPE, text=True)
     if python_version_result.returncode != 0:
         raise dbtenv.DbtenvError(f"Failed to run `{python}`.")
     python_version_output = python_version_result.stdout.strip()
-    python_version_match = re.search(r'(\d+)\.(\d+)\.\d+\S*', python_version_output)
+    python_version_match = re.search(r'\d+\.\d+\.\d+', python_version_output)
     if not python_version_match:
         raise dbtenv.DbtenvError(f"No Python version number found in \"{python_version_output}\".")
-    python_version = python_version_match[0]
-    python_major_version = int(python_version_match[1])
-    python_minor_version = int(python_version_match[2])
+    python_version = dbtenv.Version(python_version_match[0])
 
-    if (python_major_version, python_minor_version) >= (3, 9):
+    if python_version >= dbtenv.Version('3.9'):
         raise dbtenv.DbtenvError(
             f"Python {python_version} is being used, but dbt currently isn't compatible with Python 3.9 or above."
+        )
+    elif dbt_version < dbtenv.Version('0.15') and python_version >= dbtenv.Version('3.8'):
+        raise dbtenv.DbtenvError(
+            f"Python {python_version} is being used, but dbt versions before 0.15 aren't compatible with Python 3.8 or above."
         )
 
     logger.debug(f"Python {python_version} should be compatible with dbt.")
