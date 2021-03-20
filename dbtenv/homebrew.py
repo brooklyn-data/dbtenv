@@ -16,6 +16,10 @@ def get_dbt_formula_version(formula: str) -> dbtenv.Version:
     return dbtenv.Version(re.sub(r'^dbt@', '', formula))
 
 
+def get_dbt_version_formula(version: dbtenv.Version) -> str:
+    return f'dbt@{version.homebrew_version}'
+
+
 def get_homebrew_dbt_versions() -> List[dbtenv.Version]:
     brew_args = ['info', '--json', 'dbt']
     logger.debug(f"Running `brew` with arguments {brew_args}.")
@@ -38,7 +42,7 @@ class HomebrewDbt(dbtenv.Dbt):
 
     def __init__(self, env: dbtenv.Environment, version: dbtenv.Version) -> None:
         super().__init__(env, version)
-        self.keg_directory = os.path.join(env.homebrew_cellar_directory, f'dbt@{version.homebrew_version}')
+        self.keg_directory = os.path.join(env.homebrew_cellar_directory, get_dbt_version_formula(version))
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False) -> None:
@@ -50,7 +54,7 @@ class HomebrewDbt(dbtenv.Dbt):
                 raise dbtenv.DbtenvError(f"dbt {self.version.homebrew_version} is already installed with Homebrew.")
 
         logger.info(f"Installing dbt {self.version.homebrew_version} with Homebrew.")
-        brew_args = ['install', f'dbt@{self.version.homebrew_version}']
+        brew_args = ['install', get_dbt_version_formula(self.version)]
         logger.debug(f"Running `brew` with arguments {brew_args}.")
         brew_result = subprocess.run(['brew', *brew_args])
         if brew_result.returncode != 0:
@@ -81,7 +85,7 @@ class HomebrewDbt(dbtenv.Dbt):
             brew_args = ['uninstall']
             if force:
                 brew_args.append('--force')
-            brew_args.append(f'dbt@{self.version.homebrew_version}')
+            brew_args.append(get_dbt_version_formula(self.version))
             logger.debug(f"Running `brew` with arguments {brew_args}.")
             brew_result = subprocess.run(['brew', *brew_args])
             if brew_result.returncode != 0:
