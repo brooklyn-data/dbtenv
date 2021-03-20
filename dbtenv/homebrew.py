@@ -42,22 +42,15 @@ class HomebrewDbt(dbtenv.Dbt):
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False) -> None:
-        already_installed = self.is_installed()
-        if already_installed:
+        if self.is_installed():
             if force:
                 logger.info(f"dbt {self.version.homebrew_version} is already installed with Homebrew but will be reinstalled.")
-                self._executable = None
+                self.uninstall(force=True)
             else:
                 raise dbtenv.DbtenvError(f"dbt {self.version.homebrew_version} is already installed with Homebrew.")
 
-        brew_args = []
-        if already_installed and force:
-            brew_args.append('reinstall')
-        else:
-            brew_args.append('install')
-        brew_args.append(f'dbt@{self.version.homebrew_version}')
         logger.info(f"Installing dbt {self.version.homebrew_version} with Homebrew.")
-
+        brew_args = ['install', f'dbt@{self.version.homebrew_version}']
         logger.debug(f"Running `brew` with arguments {brew_args}.")
         brew_result = subprocess.run(['brew', *brew_args])
         if brew_result.returncode != 0:
