@@ -85,7 +85,10 @@ class HomebrewDbt(dbtenv.Dbt):
             raise dbtenv.DbtenvError(f"No dbt {self.version.homebrew_version} installation found in `{self.keg_directory}`.")
 
         if force or dbtenv.string_is_true(input(f"Uninstall dbt {self.version.homebrew_version} from Homebrew? ")):
-            brew_args = ['uninstall', f'dbt@{self.version.homebrew_version}']
+            brew_args = ['uninstall']
+            if force:
+                brew_args.append('--force')
+            brew_args.append(f'dbt@{self.version.homebrew_version}')
             logger.debug(f"Running `brew` with arguments {brew_args}.")
             brew_result = subprocess.run(['brew', *brew_args])
             if brew_result.returncode != 0:
