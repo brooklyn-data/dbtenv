@@ -21,11 +21,9 @@ class ExitCode(IntEnum):
     INTERRUPTED = 2
 
 
-def build_args_parser() -> argparse.ArgumentParser:
-    common_command_args_parser    = _build_common_args_parser()
-    common_subcommand_args_parser = _build_common_args_parser(dest_prefix='subcommand_')
-
-    parser = argparse.ArgumentParser(
+def build_root_args_parser(env: dbtenv.Environment) -> argparse.ArgumentParser:
+    common_args_parser = build_common_args_parser(env)
+    root_args_parser = argparse.ArgumentParser(
         description=f"""
             Lets you easily install and switch between multiple versions of dbt using pip with Python virtual environments,
             or optionally using Homebrew on Mac or Linux.
@@ -34,10 +32,40 @@ def build_args_parser() -> argparse.ArgumentParser:
             specific directories using `{dbtenv.LOCAL_VERSION_FILE}` files, or in your shell using a
             {dbtenv.DBT_VERSION_VAR} environment variable.
         """,
-        parents=[common_command_args_parser],
+        parents=[common_args_parser],
         epilog="Run a sub-command with the --help option to see help for that sub-command."
     )
+    return root_args_parser
 
+
+def build_common_args_parser(env: dbtenv.Environment, dest_prefix: str = '') -> argparse.ArgumentParser:
+    common_args_parser = argparse.ArgumentParser(add_help=False)
+    common_args_parser.add_argument(
+        '--debug',
+        dest=f'{dest_prefix}debug',
+        action='store_const',
+        const=True,
+        help=f"""
+            Output debug information as dbtenv runs.
+            The default is to not output debug information, but that can be overridden by setting a {dbtenv.DEBUG_VAR}
+            environment variable.
+        """
+    )
+    if env.homebrew_installed:
+        common_args_parser.add_argument(
+            '--installer',
+            dest=f'{dest_prefix}installer',
+            type=dbtenv.Installer,
+            choices=dbtenv.Installer,
+            help=f"""
+                Which installer to use.
+                The default is pip, but that can be overridden by setting a {dbtenv.DEFAULT_INSTALLER_VAR} environment variable.
+            """
+        )
+    return common_args_parser
+
+
+def build_common_install_args_parser(env: dbtenv.Environment) -> argparse.ArgumentParser:
     common_install_args_parser = argparse.ArgumentParser(add_help=False)
     common_install_args_parser.add_argument(
         '--python',
@@ -58,55 +86,7 @@ def build_args_parser() -> argparse.ArgumentParser:
             {dbtenv.SIMULATE_RELEASE_DATE_VAR} environment variable.
         """
     )
-
-    auto_install_arg_parser = argparse.ArgumentParser(add_help=False)
-    auto_install_arg_parser.add_argument(
-        '--auto-install',
-        action='store_const',
-        const=True,
-        help=f"""
-            Automatically install a specified dbt version if it isn't already installed.
-            The default is to not auto-install, but that can be overridden by setting a {dbtenv.AUTO_INSTALL_VAR}
-            environment variable.
-        """
-    )
-
-    subparsers = parser.add_subparsers(dest='subcommand', title="Sub-commands")
-    dbtenv.versions.build_versions_args_parser(subparsers, [common_subcommand_args_parser])
-    dbtenv.install.build_install_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
-    dbtenv.version.build_version_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser, auto_install_arg_parser])
-    dbtenv.which.build_which_args_parser(subparsers, [common_subcommand_args_parser])
-    dbtenv.execute.build_execute_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser, auto_install_arg_parser])
-    dbtenv.uninstall.build_uninstall_args_parser(subparsers, [common_subcommand_args_parser])
-
-    return parser
-
-
-def _build_common_args_parser(dest_prefix: str = '') -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument(
-        '--debug',
-        dest=f'{dest_prefix}debug',
-        action='store_const',
-        const=True,
-        help=f"""
-            Output debug information as dbtenv runs.
-            The default is to not output debug information, but that can be overridden by setting a {dbtenv.DEBUG_VAR}
-            environment variable.
-        """
-    )
-    if dbtenv.ENV.homebrew_installed:
-        parser.add_argument(
-            '--installer',
-            dest=f'{dest_prefix}installer',
-            type=dbtenv.Installer,
-            choices=dbtenv.Installer,
-            help=f"""
-                Which installer to use.
-                The default is pip, but that can be overridden by setting a {dbtenv.DEFAULT_INSTALLER_VAR} environment variable.
-            """
-        )
-    return parser
+    return common_install_args_parser
 
 
 def main(args: List[str] = None) -> None:
@@ -116,49 +96,64 @@ def main(args: List[str] = None) -> None:
 
         logger.debug(f"Arguments = {args}")
 
+        env = dbtenv.Environment()
+
+        versions_subcommand = dbtenv.versions.VersionsSubcommand(env)
+        install_subcommand = dbtenv.install.InstallSubcommand(env)
+        version_subcommand = dbtenv.version.VersionSubcommand(env)
+        which_subcommand = dbtenv.which.WhichSubcommand(env)
+        execute_subcommand = dbtenv.execute.ExecuteSubcommand(env)
+        uninstall_subcommand = dbtenv.uninstall.UninstallSubcommand(env)
+
+        args_parser = build_root_args_parser(env)
+        subparsers = args_parser.add_subparsers(dest='subcommand', title="Sub-commands")
+        common_subcommand_args_parser = build_common_args_parser(env, dest_prefix='subcommand_')
+        common_install_args_parser = build_common_install_args_parser(env)
+        versions_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser])
+        install_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
+        version_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
+        which_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser])
+        execute_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
+        uninstall_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser])
+
         parsed_args = dbtenv.Args()
-        args_parser = build_args_parser()
         args_parser.parse_args(args, namespace=parsed_args)
 
         debug = parsed_args.debug or parsed_args.get('subcommand_debug')
         if debug:
-            dbtenv.ENV.debug = debug
+            env.debug = debug
+
+        logger.debug(f"Parsed arguments = {parsed_args}")
 
         installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
         if installer:
-            dbtenv.ENV.installer = installer
+            env.installer = installer
 
         python = parsed_args.get('python')
         if python:
-            dbtenv.ENV.python = python
-
-        auto_install = parsed_args.get('auto_install')
-        if auto_install:
-            dbtenv.ENV.auto_install = auto_install
+            env.python = python
 
         simulate_release_date = parsed_args.get('simulate_release_date')
         if simulate_release_date:
-            dbtenv.ENV.simulate_release_date = simulate_release_date
-
-        logger.debug(f"Parsed arguments = {parsed_args}")
+            env.simulate_release_date = simulate_release_date
 
         subcommand = parsed_args.subcommand
         if not subcommand:
             args_parser.print_help()
             sys.exit(ExitCode.FAILURE)
 
-        if subcommand == 'versions':
-            dbtenv.versions.run_versions_command(parsed_args)
-        elif subcommand == 'install':
-            dbtenv.install.run_install_command(parsed_args)
-        elif subcommand == 'version':
-            dbtenv.version.run_version_command(parsed_args)
-        elif subcommand == 'which':
-            dbtenv.which.run_which_command(parsed_args)
-        elif subcommand in ('execute', 'exec'):
-            dbtenv.execute.run_execute_command(parsed_args)
-        elif subcommand == 'uninstall':
-            dbtenv.uninstall.run_uninstall_command(parsed_args)
+        if subcommand == versions_subcommand.name:
+            versions_subcommand.execute(parsed_args)
+        elif subcommand == install_subcommand.name:
+            install_subcommand.execute(parsed_args)
+        elif subcommand == version_subcommand.name:
+            version_subcommand.execute(parsed_args)
+        elif subcommand == which_subcommand.name:
+            which_subcommand.execute(parsed_args)
+        elif subcommand == execute_subcommand.name or subcommand in execute_subcommand.aliases:
+            execute_subcommand.execute(parsed_args)
+        elif subcommand == uninstall_subcommand.name:
+            uninstall_subcommand.execute(parsed_args)
         else:
             raise dbtenv.DbtenvError(f"Unknown sub-command `{subcommand}`.")
     except dbtenv.DbtenvError as error:

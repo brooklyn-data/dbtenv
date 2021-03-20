@@ -1,3 +1,4 @@
+from abc import ABC as AbstractBaseClass, abstractmethod
 import argparse
 import distutils.version
 from enum import Enum
@@ -7,8 +8,9 @@ import os.path
 import platform
 import re
 import shutil
+import subprocess
 import sys
-from typing import Any, Optional
+from typing import Any, List, Optional, Tuple
 
 
 VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
@@ -23,18 +25,19 @@ DEFAULT_INSTALLER_VAR     = 'DBTENV_DEFAULT_INSTALLER'
 PYTHON_VAR                = 'DBTENV_PYTHON'
 SIMULATE_RELEASE_DATE_VAR = 'DBTENV_SIMULATE_RELEASE_DATE'
 
+
+def string_is_true(value: str) -> bool:
+    return value.strip().lower() in ('1', 'active', 'enable', 'enabled', 'on', 't', 'true', 'y', 'yes')
+
+
 LOGGER = logging.getLogger('dbtenv')
 output_handler = logging.StreamHandler()
 output_handler.setFormatter(logging.Formatter('{name} {levelname}:  {message}', style='{'))
 output_handler.setLevel(logging.DEBUG)
 LOGGER.addHandler(output_handler)
 LOGGER.propagate = False
-LOGGER.setLevel(logging.INFO)
+LOGGER.setLevel(logging.DEBUG if string_is_true(os.environ.get(DEBUG_VAR, '')) else logging.INFO)
 logger = LOGGER
-
-
-def string_is_true(value: str) -> bool:
-    return value.strip().lower() in ('1', 'active', 'enable', 'enabled', 'on', 't', 'true', 'y', 'yes')
 
 
 class DbtenvError(RuntimeError):
@@ -113,18 +116,19 @@ class Version(distutils.version.LooseVersion):
 
 class Environment:
     def __init__(self) -> None:
-        # Enable debug logging during initialization if it's configured.
-        self.debug = self.debug
-
         self.os = platform.system()
         if self.os == 'Darwin':
             self.os = 'Mac'
+
+        self.env_vars = os.environ
+
+        self.working_directory = os.getcwd()
 
         self.venvs_directory     = os.path.expanduser(VENVS_DIRECTORY)
         self.global_version_file = os.path.expanduser(GLOBAL_VERSION_FILE)
 
         self.homebrew_installed = False
-        self.homebrew_cellar_directory = os.environ.get('HOMEBREW_CELLAR')
+        self.homebrew_cellar_directory = self.env_vars.get('HOMEBREW_CELLAR')
         if not self.homebrew_cellar_directory and self.os != 'Windows':
             brew_executable = shutil.which('brew')
             if brew_executable:
@@ -137,13 +141,11 @@ class Environment:
 
     @property
     def debug(self) -> bool:
-        if self._debug is not None:
-            return self._debug
-
-        if DEBUG_VAR in os.environ:
-            self._debug = string_is_true(os.environ[DEBUG_VAR])
-        else:
-            self._debug = False
+        if self._debug is None:
+            if DEBUG_VAR in self.env_vars:
+                self._debug = string_is_true(self.env_vars[DEBUG_VAR])
+            else:
+                self._debug = False
 
         return self._debug
 
@@ -156,13 +158,11 @@ class Environment:
 
     @property
     def default_installer(self) -> Installer:
-        if self._default_installer:
-            return self._default_installer
-
-        if DEFAULT_INSTALLER_VAR in os.environ:
-            self._default_installer = Installer(os.environ[DEFAULT_INSTALLER_VAR].lower())
-        else:
-            self._default_installer = Installer.PIP
+        if self._default_installer is None:
+            if DEFAULT_INSTALLER_VAR in self.env_vars:
+                self._default_installer = Installer(self.env_vars[DEFAULT_INSTALLER_VAR].lower())
+            else:
+                self._default_installer = Installer.PIP
 
         return self._default_installer
 
@@ -180,23 +180,21 @@ class Environment:
 
     @property
     def python(self) -> str:
-        if self._python:
-            return self._python
-
-        if PYTHON_VAR in os.environ:
-            self._python = os.environ[PYTHON_VAR]
-        else:
-            # If dbtenv is installed in a virtual environment use the base Python installation's executable.
-            base_exec_path = sys.base_exec_prefix
-            possible_python_subpaths = ['python.exe'] if self.os == 'Windows' else ['bin/python3', 'bin/python']
-            for possible_python_subpath in possible_python_subpaths:
-                python_path = os.path.join(base_exec_path, possible_python_subpath)
-                if os.path.isfile(python_path):
-                    logger.debug(f"Found Python executable `{python_path}`.")
-                    self._python = python_path
-                    break
+        if self._python is None:
+            if PYTHON_VAR in self.env_vars:
+                self._python = self.env_vars[PYTHON_VAR]
             else:
-                raise DbtenvError(f"No Python executable found in `{base_exec_path}`.")
+                # If dbtenv is installed in a virtual environment use the base Python installation's executable.
+                base_exec_path = sys.base_exec_prefix
+                possible_python_subpaths = ['python.exe'] if self.os == 'Windows' else ['bin/python3', 'bin/python']
+                for possible_python_subpath in possible_python_subpaths:
+                    python_path = os.path.join(base_exec_path, possible_python_subpath)
+                    if os.path.isfile(python_path):
+                        logger.debug(f"Found Python executable `{python_path}`.")
+                        self._python = python_path
+                        break
+                else:
+                    raise DbtenvError(f"No Python executable found in `{base_exec_path}`.")
 
         return self._python
 
@@ -208,31 +206,23 @@ class Environment:
 
     @property
     def auto_install(self) -> bool:
-        if self._auto_install is not None:
-            return self._auto_install
-
-        if AUTO_INSTALL_VAR in os.environ:
-            self._auto_install = string_is_true(os.environ[AUTO_INSTALL_VAR])
-        else:
-            self._auto_install = False
+        if self._auto_install is None:
+            if AUTO_INSTALL_VAR in self.env_vars:
+                self._auto_install = string_is_true(self.env_vars[AUTO_INSTALL_VAR])
+            else:
+                self._auto_install = False
 
         return self._auto_install
-
-    @auto_install.setter
-    def auto_install(self, value: bool) -> None:
-        self._auto_install = value
 
     _simulate_release_date: Optional[bool] = None
 
     @property
     def simulate_release_date(self) -> bool:
-        if self._simulate_release_date is not None:
-            return self._simulate_release_date
-
-        if SIMULATE_RELEASE_DATE_VAR in os.environ:
-            self._simulate_release_date = string_is_true(os.environ[SIMULATE_RELEASE_DATE_VAR])
-        else:
-            self._simulate_release_date = False
+        if self._simulate_release_date is None:
+            if SIMULATE_RELEASE_DATE_VAR in self.env_vars:
+                self._simulate_release_date = string_is_true(self.env_vars[SIMULATE_RELEASE_DATE_VAR])
+            else:
+                self._simulate_release_date = False
 
         return self._simulate_release_date
 
@@ -240,4 +230,114 @@ class Environment:
     def simulate_release_date(self, value: bool) -> None:
         self._simulate_release_date = value
 
-ENV = Environment()
+    def try_get_version_and_source(self) -> Tuple[Optional[Version], Optional[str]]:
+        shell_version = self.try_get_shell_version()
+        if shell_version:
+            return shell_version, f"{DBT_VERSION_VAR} environment variable"
+
+        local_version, version_file = self.try_get_local_version_and_source()
+        if local_version:
+            return local_version, f"`{version_file}`"
+
+        global_version = self.try_get_global_version()
+        if global_version:
+            return global_version, f"`{self.global_version_file}`"
+
+        return None, None
+
+    def try_get_global_version(self) -> Optional[Version]:
+        if os.path.isfile(self.global_version_file):
+            return self._read_version_file(self.global_version_file)
+
+        return None
+
+    def set_global_version(self, version: Version) -> None:
+        self._write_version_file(self.global_version_file, version)
+        logger.info(f"{version} is now set as the global dbt version in `{self.global_version_file}`.")
+
+    def try_get_local_version_and_source(self) -> Tuple[Optional[Version], Optional[str]]:
+        search_dir = self.working_directory
+        while True:
+            version_file = os.path.join(search_dir, LOCAL_VERSION_FILE)
+            if os.path.isfile(version_file):
+                version = self._read_version_file(version_file)
+                return version, version_file
+
+            parent_dir = os.path.dirname(search_dir)
+            if parent_dir == search_dir:
+                break
+
+            search_dir = parent_dir
+
+        return None, None
+
+    def set_local_version(self, version: Version) -> None:
+        version_file = os.path.join(self.working_directory, LOCAL_VERSION_FILE)
+        self._write_version_file(version_file, version)
+        logger.info(f"{version} is now set as the local dbt version in `{version_file}`.")
+
+
+    def try_get_shell_version(self) -> Optional[Version]:
+        if DBT_VERSION_VAR in self.env_vars:
+            return Version(self.env_vars[DBT_VERSION_VAR])
+
+        return None
+
+    def _read_version_file(self, file_path: str) -> Version:
+        with open(file_path, 'r') as file:
+            return Version(file.readline().strip())
+
+    def _write_version_file(self, file_path: str, version: Version) -> None:
+        with open(file_path, 'w') as file:
+            file.write(str(version))
+
+
+class Subcommand(AbstractBaseClass):
+    """A dbtenv sub-command, which can be executed."""
+
+    def __init__(self, env: Environment) -> None:
+        self.env = env
+
+    @abstractmethod
+    def add_args_parser(self, subparsers: argparse._SubParsersAction, parent_parsers: List[argparse.ArgumentParser]) -> None:
+        pass
+
+    @abstractmethod
+    def execute(self, args: Args) -> None:
+        pass
+
+
+class Dbt(AbstractBaseClass):
+    """A specific version of dbt, which can be installed, executed, and uninstalled."""
+
+    def __init__(self, env: Environment, version: Version) -> None:
+        self.env = env
+        self.version = version
+
+    @abstractmethod
+    def install(self, force: bool = False) -> None:
+        pass
+
+    def is_installed(self) -> bool:
+        return self.try_get_executable() is not None
+
+    @abstractmethod
+    def get_executable(self) -> str:
+        pass
+
+    def try_get_executable(self) -> Optional[str]:
+        try:
+            return self.get_executable()
+        except:
+            return None
+
+    def execute(self, args: List[str]) -> None:
+        executable = self.get_executable()
+        logger.debug(f"Running `{executable}` with arguments {args}.")
+        dbt_result = subprocess.run([executable, *args])
+        if dbt_result.returncode != 0:
+            raise DbtError(dbt_result.returncode)
+
+    @abstractmethod
+    def uninstall(self, force: bool = False) -> None:
+        pass
