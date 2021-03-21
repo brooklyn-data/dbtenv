@@ -126,6 +126,34 @@ class VenvDbt(dbtenv.Dbt):
 
         return self._executable
 
+    def execute(self, args: List[str]) -> None:
+        try:
+            return super().execute(args)
+        except FileNotFoundError:
+            # FileNotFoundError can occur if the Python installation used to create the virtual environment no longer exists.
+            # One common way that can happen is if a Homebrew-installed Python was used and subsequently upgraded.
+            executable_dir = os.path.dirname(self._executable)
+            with os.scandir(executable_dir) as executable_dir_scan:
+                broken_python_symlinks = [
+                    entry
+                    for entry in executable_dir_scan
+                    if entry.name.startswith('python')
+                        and entry.is_symlink()
+                        and os.path.sep in os.readlink(entry.path)  # Ignore local symlinks like `python` -> `python3`.
+                        and not os.path.exists(entry.path)
+                ]
+            if broken_python_symlinks:
+                broken_symlink = broken_python_symlinks[0]
+                broken_symlink_target = os.readlink(broken_symlink.path)
+                logger.warning(
+                    f"The virtual environment for dbt {self.version.pypi_version} is broken because the"
+                    f" `{broken_symlink.path}` symlink points to `{broken_symlink_target}`, which no longer exists."
+                )
+                if dbtenv.string_is_true(input(f"Reinstall dbt {self.version.pypi_version} using `{self.env.python}`? ")):
+                    self.install(force=True)
+                    return super().execute(args)
+            raise
+
     def uninstall(self, force: bool = False) -> None:
         if not self.is_installed():
             raise dbtenv.DbtenvError(f"No dbt {self.version.pypi_version} installation found in `{self.venv_directory}`.")
