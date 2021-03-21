@@ -20,6 +20,10 @@ def get_dbt_version_formula(version: dbtenv.Version) -> str:
     return f'dbt@{version.homebrew_version}'
 
 
+def get_dbt_version_keg_directory(env: dbtenv.Environment, version: dbtenv.Version) -> str:
+    return os.path.join(env.homebrew_prefix_directory, 'opt', get_dbt_version_formula(version))
+
+
 def get_homebrew_dbt_versions() -> List[dbtenv.Version]:
     brew_args = ['info', '--json', 'dbt']
     logger.debug(f"Running `brew` with arguments {brew_args}.")
@@ -31,8 +35,8 @@ def get_homebrew_dbt_versions() -> List[dbtenv.Version]:
 
 
 def get_installed_homebrew_dbt_versions(env: dbtenv.Environment) -> List[dbtenv.Version]:
-    versioned_keg_dir_pattern = os.path.join(env.homebrew_cellar_directory, 'dbt@*') + os.path.sep
-    versioned_formulae = (os.path.basename(os.path.dirname(keg_dir)) for keg_dir in glob.glob(versioned_keg_dir_pattern))
+    versioned_keg_dir_pattern = get_dbt_version_keg_directory(env, dbtenv.Version('*'))
+    versioned_formulae = (os.path.basename(keg_dir) for keg_dir in glob.glob(versioned_keg_dir_pattern))
     possible_versions = (get_dbt_formula_version(formula) for formula in versioned_formulae)
     return [version for version in possible_versions if HomebrewDbt(env, version).is_installed()]
 
@@ -42,7 +46,7 @@ class HomebrewDbt(dbtenv.Dbt):
 
     def __init__(self, env: dbtenv.Environment, version: dbtenv.Version) -> None:
         super().__init__(env, version)
-        self.keg_directory = os.path.join(env.homebrew_cellar_directory, get_dbt_version_formula(version))
+        self.keg_directory = get_dbt_version_keg_directory(env, version)
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False) -> None:
@@ -67,11 +71,10 @@ class HomebrewDbt(dbtenv.Dbt):
             if not os.path.isdir(self.keg_directory):
                 raise dbtenv.DbtenvError(f"No dbt {self.version.homebrew_version} installation found in `{self.keg_directory}`.")
 
-            # We can't be sure what the installation subdirectory within the keg directory will be.
-            dbt_paths = glob.glob(os.path.join(self.keg_directory, '*', 'bin', 'dbt'))
-            if dbt_paths:
-                logger.debug(f"Found dbt executable `{dbt_paths[0]}`.")
-                self._executable = dbt_paths[0]
+            dbt_path = os.path.join(self.keg_directory, 'bin/dbt')
+            if os.path.isfile(dbt_path):
+                logger.debug(f"Found dbt executable `{dbt_path}`.")
+                self._executable = dbt_path
             else:
                 raise dbtenv.DbtenvError(f"No dbt executable found in `{self.keg_directory}`.")
 

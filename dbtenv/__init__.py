@@ -128,14 +128,14 @@ class Environment:
         self.global_version_file = os.path.expanduser(GLOBAL_VERSION_FILE)
 
         self.homebrew_installed = False
-        self.homebrew_cellar_directory = self.env_vars.get('HOMEBREW_CELLAR')
-        if not self.homebrew_cellar_directory and self.os != 'Windows':
+        self.homebrew_prefix_directory = self.env_vars.get('HOMEBREW_PREFIX')
+        if not self.homebrew_prefix_directory and self.os != 'Windows':
             brew_executable = shutil.which('brew')
             if brew_executable:
-                self.homebrew_cellar_directory = os.path.join(os.path.dirname(os.path.dirname(brew_executable)), 'Cellar')
-        if self.homebrew_cellar_directory and os.path.isdir(self.homebrew_cellar_directory):
+                self.homebrew_prefix_directory = os.path.dirname(os.path.dirname(brew_executable))
+        if self.homebrew_prefix_directory and os.path.isdir(self.homebrew_prefix_directory):
             self.homebrew_installed = True
-            logger.debug(f"Homebrew is installed with cellar at `{self.homebrew_cellar_directory}`.")
+            logger.debug(f"Homebrew is installed with prefix `{self.homebrew_prefix_directory}`.")
 
     _debug: Optional[bool] = None
 
