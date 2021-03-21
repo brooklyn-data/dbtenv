@@ -45,6 +45,8 @@ class VenvDbt(dbtenv.Dbt):
             raise dbtenv.DbtenvError(f"Failed to create virtual environment in `{self.venv_directory}`.")
 
         pip = self._find_pip()
+        # Install wheel to avoid pip falling back to using legacy `setup.py` installs.
+        subprocess.run([pip, 'install', '--disable-pip-version-check', 'wheel'])
         pip_args = ['install', '--disable-pip-version-check']
         if package_location:
             package_source = f"`{package_location}`"
