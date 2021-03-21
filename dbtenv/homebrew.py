@@ -60,11 +60,13 @@ class HomebrewDbt(dbtenv.Dbt):
         logger.info(f"Installing dbt {self.version.homebrew_version} with Homebrew.")
         brew_args = ['install', get_dbt_version_formula(self.version)]
         logger.debug(f"Running `brew` with arguments {brew_args}.")
-        brew_result = subprocess.run(['brew', *brew_args])
-        if brew_result.returncode != 0:
+        subprocess.run(['brew', *brew_args])
+        # We can't rely on the Homebrew process return code to check for success/failure because a non-zero return code
+        # might just indicate some extraneous problem, like a failure symlinking dbt into the bin directory.
+        if self.is_installed():
+            logger.info(f"Successfully installed dbt {self.version.homebrew_version} with Homebrew.")
+        else:
             raise dbtenv.DbtenvError(f"Failed to install dbt {self.version.homebrew_version} with Homebrew.")
-
-        logger.info(f"Successfully installed dbt {self.version.homebrew_version} with Homebrew.")
 
     def get_executable(self) -> str:
         if self._executable is None:
