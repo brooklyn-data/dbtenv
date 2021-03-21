@@ -79,10 +79,10 @@ class VenvDbt(dbtenv.Dbt):
         logger.info(f"Successfully installed dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
 
     def _check_python_compatibility(self, python: str) -> None:
-        python_version_result = subprocess.run([python, '--version'], stdout=subprocess.PIPE, text=True)
+        python_version_result = subprocess.run([python, '--version'], stdout=subprocess.PIPE)
         if python_version_result.returncode != 0:
             raise dbtenv.DbtenvError(f"Failed to run `{python}`.")
-        python_version_output = python_version_result.stdout.strip()
+        python_version_output = python_version_result.stdout.decode('utf-8').strip()
         python_version_match = re.search(r'(\d+)\.(\d+)\.\d+', python_version_output)
         if not python_version_match:
             raise dbtenv.DbtenvError(f"No Python version number found in \"{python_version_output}\".")
