@@ -16,8 +16,9 @@ logger = dbtenv.LOGGER
 
 
 def get_installed_venv_dbt_versions(env: dbtenv.Environment) -> List[dbtenv.Version]:
-    possible_versions = (dbtenv.Version(entry.name) for entry in os.scandir(env.venvs_directory) if os.path.isdir(entry))
-    return [version for version in possible_versions if VenvDbt(env, version).is_installed()]
+    with os.scandir(env.venvs_directory) as venvs_dir_scan:
+        possible_versions = (dbtenv.Version(entry.name) for entry in venvs_dir_scan if entry.is_dir())
+        return [version for version in possible_versions if VenvDbt(env, version).is_installed()]
 
 
 class VenvDbt(dbtenv.Dbt):
