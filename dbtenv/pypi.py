@@ -6,6 +6,7 @@ from typing import List, Union
 import urllib.request
 
 import dbtenv
+from dbtenv import Version
 
 
 logger = dbtenv.LOGGER
@@ -18,9 +19,9 @@ def get_pypi_package_metadata(package: str) -> str:
         return json.load(package_json_response)
 
 
-def get_pypi_dbt_versions() -> List[dbtenv.Version]:
+def get_pypi_dbt_versions() -> List[Version]:
     package_metadata = get_pypi_package_metadata('dbt')
-    possible_versions = ((dbtenv.Version(version), files) for version, files in package_metadata['releases'].items())
+    possible_versions = ((Version(version), files) for version, files in package_metadata['releases'].items())
     return [version for version, files in possible_versions if any(not file['yanked'] for file in files)]
 
 

@@ -7,6 +7,7 @@ import traceback
 from typing import Collection, List, Optional, Set
 
 import dbtenv
+from dbtenv import Args, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.install
 import dbtenv.pypi
@@ -16,7 +17,7 @@ import dbtenv.venv
 logger = dbtenv.LOGGER
 
 
-class VersionSubcommand(dbtenv.Subcommand):
+class VersionSubcommand(Subcommand):
     """Show the dbt version automatically detected from the environment, or show/set the dbt version in a specific context."""
 
     name = 'version'
@@ -36,7 +37,7 @@ class VersionSubcommand(dbtenv.Subcommand):
             '--global',
             dest='global_dbt_version',
             nargs='?',
-            type=dbtenv.Version,
+            type=Version,
             const='',
             metavar='<dbt_version>',
             help=f"Show/set the dbt version globally using the `{dbtenv.GLOBAL_VERSION_FILE}` file."
@@ -45,7 +46,7 @@ class VersionSubcommand(dbtenv.Subcommand):
             '--local',
             dest='local_dbt_version',
             nargs='?',
-            type=dbtenv.Version,
+            type=Version,
             const='',
             metavar='<dbt_version>',
             help=f"Show/set the dbt version for the local directory using `{dbtenv.LOCAL_VERSION_FILE}` files."
@@ -65,7 +66,7 @@ class VersionSubcommand(dbtenv.Subcommand):
             help=f"Show the dbt version set for the current shell using a {dbtenv.DBT_VERSION_VAR} environment variable."
         )
 
-    def execute(self, args: dbtenv.Args) -> None:
+    def execute(self, args: Args) -> None:
         if args.global_dbt_version is not None:
             if args.global_dbt_version != '':
                 dbtenv.install.ensure_dbt_is_installed(self.env, args.global_dbt_version)
@@ -117,29 +118,29 @@ class VersionSubcommand(dbtenv.Subcommand):
                 logger.info("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
 
 
-def read_version_file(file_path: str) -> dbtenv.Version:
+def read_version_file(file_path: str) -> Version:
     with open(file_path, 'r') as file:
-        return dbtenv.Version(file.readline().strip(), source=file_path)
+        return Version(file.readline().strip(), source=file_path)
 
 
-def write_version_file(file_path: str, version: dbtenv.Version) -> None:
+def write_version_file(file_path: str, version: Version) -> None:
     with open(file_path, 'w') as file:
         file.write(str(version))
 
 
-def try_get_global_version(env: dbtenv.Environment) -> Optional[dbtenv.Version]:
+def try_get_global_version(env: Environment) -> Optional[Version]:
     if os.path.isfile(env.global_version_file):
         return read_version_file(env.global_version_file)
     else:
         return None
 
 
-def set_global_version(env: dbtenv.Environment, version: dbtenv.Version) -> None:
+def set_global_version(env: Environment, version: Version) -> None:
     write_version_file(env.global_version_file, version)
     logger.info(f"{version} is now set as the global dbt version in `{env.global_version_file}`.")
 
 
-def try_get_local_version(env: dbtenv.Environment) -> Optional[dbtenv.Version]:
+def try_get_local_version(env: Environment) -> Optional[Version]:
     version_file = env.find_file_along_working_path(dbtenv.LOCAL_VERSION_FILE)
     if version_file:
         return read_version_file(version_file)
@@ -147,15 +148,15 @@ def try_get_local_version(env: dbtenv.Environment) -> Optional[dbtenv.Version]:
         return None
 
 
-def set_local_version(env: dbtenv.Environment, version: dbtenv.Version) -> None:
+def set_local_version(env: Environment, version: Version) -> None:
     version_file = os.path.join(env.working_directory, dbtenv.LOCAL_VERSION_FILE)
     write_version_file(version_file, version)
     logger.info(f"{version} is now set as the local dbt version in `{version_file}`.")
 
 
-def try_get_shell_version(env: dbtenv.Environment) -> Optional[dbtenv.Version]:
+def try_get_shell_version(env: Environment) -> Optional[Version]:
     if dbtenv.DBT_VERSION_VAR in env.env_vars:
-        return dbtenv.Version(env.env_vars[dbtenv.DBT_VERSION_VAR], source=dbtenv.DBT_VERSION_VAR)
+        return Version(env.env_vars[dbtenv.DBT_VERSION_VAR], source=dbtenv.DBT_VERSION_VAR)
     else:
         return None
 
@@ -165,13 +166,13 @@ class VersionRequirement:
         self.requirement = requirement
         requirement_match = re.match(r'(?P<operator>[<>]=?)?(?P<version>.+)', requirement)
         self.operator = requirement_match['operator'] or '=='
-        self.version = dbtenv.Version(requirement_match['version'])
+        self.version = Version(requirement_match['version'])
         self.source = source
 
     def __str__(self) -> str:
         return self.requirement
 
-    def is_compatible_with(self, version: dbtenv.Version) -> bool:
+    def is_compatible_with(self, version: Version) -> bool:
         if self.operator == '<':
             return version < self.version
         elif self.operator == '<=':
@@ -207,7 +208,7 @@ def try_get_project_version_requirements(project_file: str) -> List[VersionRequi
     return []
 
 
-def try_get_max_compatible_version(versions: Collection[dbtenv.Version], requirements: Collection[VersionRequirement]) -> Optional[dbtenv.Version]:
+def try_get_max_compatible_version(versions: Collection[Version], requirements: Collection[VersionRequirement]) -> Optional[Version]:
     compatible_versions = [
         version
         for version in versions
@@ -225,7 +226,7 @@ def try_get_max_compatible_version(versions: Collection[dbtenv.Version], require
         return compatible_versions[-1]
 
 
-def try_get_project_version(env: dbtenv.Environment, preferred_version: Optional[dbtenv.Version] = None) -> Optional[dbtenv.Version]:
+def try_get_project_version(env: Environment, preferred_version: Optional[Version] = None) -> Optional[Version]:
     version_requirements = try_get_project_version_requirements(env.project_file)
     requirements_project_files = [os.path.basename(env.project_file)]
 
@@ -248,12 +249,12 @@ def try_get_project_version(env: dbtenv.Environment, preferred_version: Optional
 
     primary_installer = env.installer or env.default_installer
     use_any_installer = not env.installer
-    only_use_venv     = env.installer == dbtenv.Installer.PIP
-    only_use_homebrew = env.installer == dbtenv.Installer.HOMEBREW
+    only_use_venv     = env.installer == Installer.PIP
+    only_use_homebrew = env.installer == Installer.HOMEBREW
     use_venv          = use_any_installer or only_use_venv
     use_homebrew      = (use_any_installer or only_use_homebrew) and env.homebrew_installed
 
-    installed_versions: Set[dbtenv.Version] = set()
+    installed_versions: Set[Version] = set()
     if use_venv:
         installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(env))
     if use_homebrew:
@@ -261,25 +262,25 @@ def try_get_project_version(env: dbtenv.Environment, preferred_version: Optional
 
     compatible_version = try_get_max_compatible_version(installed_versions, version_requirements)
     if compatible_version:
-        return dbtenv.Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
+        return Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
     else:
         logger.info("No installed versions are compatible with all version requirements in the dbt project.")
 
-    installable_versions: List[dbtenv.Version] = []
-    if primary_installer == dbtenv.Installer.PIP:
+    installable_versions: List[Version] = []
+    if primary_installer == Installer.PIP:
         installable_versions = dbtenv.pypi.get_pypi_dbt_versions()
-    elif primary_installer == dbtenv.Installer.HOMEBREW:
+    elif primary_installer == Installer.HOMEBREW:
         installable_versions = dbtenv.homebrew.get_homebrew_dbt_versions()
     compatible_version = try_get_max_compatible_version(installable_versions, version_requirements)
     if compatible_version:
         logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in the dbt project.")
-        return dbtenv.Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
+        return Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
     else:
         logger.warning("No installable versions are compatible with all version requirements in the dbt project.")
         return None
 
 
-def try_get_version(env: dbtenv.Environment) -> Optional[dbtenv.Version]:
+def try_get_version(env: Environment) -> Optional[Version]:
     shell_version = try_get_shell_version(env)
     if shell_version:
         return shell_version

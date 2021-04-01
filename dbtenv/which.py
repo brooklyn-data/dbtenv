@@ -2,6 +2,7 @@ import argparse
 from typing import List, Optional
 
 import dbtenv
+from dbtenv import Args, Dbt, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.venv
 import dbtenv.version
@@ -10,7 +11,7 @@ import dbtenv.version
 logger = dbtenv.LOGGER
 
 
-class WhichSubcommand(dbtenv.Subcommand):
+class WhichSubcommand(Subcommand):
     """
     Show the full path to the executable of the specified dbt version or the dbt version automatically detected from
     the environment.
@@ -32,7 +33,7 @@ class WhichSubcommand(dbtenv.Subcommand):
         parser.add_argument(
             'dbt_version',
             nargs='?',
-            type=dbtenv.Version,
+            type=Version,
             metavar='<dbt_version>',
             help="""
                 Exact version of dbt to show.
@@ -40,7 +41,7 @@ class WhichSubcommand(dbtenv.Subcommand):
             """
         )
 
-    def execute(self, args: dbtenv.Args) -> None:
+    def execute(self, args: Args) -> None:
         if args.dbt_version:
             version = args.dbt_version
         else:
@@ -54,17 +55,17 @@ class WhichSubcommand(dbtenv.Subcommand):
             print(get_dbt(self.env, version).get_executable())
 
 
-def get_dbt(env: dbtenv.Environment, version: dbtenv.Version) -> dbtenv.Dbt:
+def get_dbt(env: Environment, version: Version) -> Dbt:
     primary_installer = env.installer or env.default_installer
     use_any_installer = not env.installer
-    only_use_venv     = env.installer == dbtenv.Installer.PIP
-    only_use_homebrew = env.installer == dbtenv.Installer.HOMEBREW
+    only_use_venv     = env.installer == Installer.PIP
+    only_use_homebrew = env.installer == Installer.HOMEBREW
     use_venv          = use_any_installer or only_use_venv
     use_homebrew      = (use_any_installer or only_use_homebrew) and env.homebrew_installed
-    prefer_venv       = primary_installer == dbtenv.Installer.PIP
-    prefer_homebrew   = primary_installer == dbtenv.Installer.HOMEBREW
+    prefer_venv       = primary_installer == Installer.PIP
+    prefer_homebrew   = primary_installer == Installer.HOMEBREW
 
-    error = dbtenv.DbtenvError(f"No dbt {version} executable found.")
+    error = DbtenvError(f"No dbt {version} executable found.")
 
     venv_dbt = None
     if use_venv:
@@ -73,7 +74,7 @@ def get_dbt(env: dbtenv.Environment, version: dbtenv.Version) -> dbtenv.Dbt:
             venv_dbt.get_executable()  # Raises an appropriate error if it's not installed.
             if prefer_venv:
                 return venv_dbt
-        except dbtenv.DbtenvError as venv_error:
+        except DbtenvError as venv_error:
             if only_use_venv:
                 raise
             else:
@@ -84,7 +85,7 @@ def get_dbt(env: dbtenv.Environment, version: dbtenv.Version) -> dbtenv.Dbt:
         try:
             homebrew_dbt.get_executable()  # Raises an appropriate error if it's not installed.
             return homebrew_dbt
-        except dbtenv.DbtenvError as homebrew_error:
+        except DbtenvError as homebrew_error:
             if only_use_homebrew:
                 raise
             elif prefer_homebrew:
@@ -96,7 +97,7 @@ def get_dbt(env: dbtenv.Environment, version: dbtenv.Version) -> dbtenv.Dbt:
     raise error
 
 
-def try_get_dbt(env: dbtenv.Environment, version: dbtenv.Version) -> Optional[dbtenv.Dbt]:
+def try_get_dbt(env: Environment, version: Version) -> Optional[Dbt]:
     try:
         return get_dbt(env, version)
     except:

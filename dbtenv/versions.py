@@ -2,6 +2,7 @@ import argparse
 from typing import List, Set
 
 import dbtenv
+from dbtenv import Args, DbtenvError, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.pypi
 import dbtenv.venv
@@ -11,7 +12,7 @@ import dbtenv.version
 logger = dbtenv.LOGGER
 
 
-class VersionsSubcommand(dbtenv.Subcommand):
+class VersionsSubcommand(Subcommand):
     """Show the dbt versions that are available to be installed, or that are installed."""
 
     name = 'versions'
@@ -30,15 +31,15 @@ class VersionsSubcommand(dbtenv.Subcommand):
             help=f"Only show the installed dbt versions."
         )
 
-    def execute(self, args: dbtenv.Args) -> None:
+    def execute(self, args: Args) -> None:
         primary_installer = self.env.installer or self.env.default_installer
         use_any_installer = not self.env.installer
-        only_use_venv     = self.env.installer == dbtenv.Installer.PIP
-        only_use_homebrew = self.env.installer == dbtenv.Installer.HOMEBREW
+        only_use_venv     = self.env.installer == Installer.PIP
+        only_use_homebrew = self.env.installer == Installer.HOMEBREW
         use_venv          = use_any_installer or only_use_venv
         use_homebrew      = (use_any_installer or only_use_homebrew) and self.env.homebrew_installed
 
-        installed_versions: Set[dbtenv.Version] = set()
+        installed_versions: Set[Version] = set()
         if use_venv:
             installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(self.env))
         if use_homebrew:
@@ -46,12 +47,12 @@ class VersionsSubcommand(dbtenv.Subcommand):
 
         distinct_versions = installed_versions.copy()
         if not args.installed:
-            if primary_installer == dbtenv.Installer.PIP:
+            if primary_installer == Installer.PIP:
                 distinct_versions.update(dbtenv.pypi.get_pypi_dbt_versions())
-            elif primary_installer == dbtenv.Installer.HOMEBREW:
+            elif primary_installer == Installer.HOMEBREW:
                 distinct_versions.update(dbtenv.homebrew.get_homebrew_dbt_versions())
             else:
-                raise dbtenv.DbtenvError(f"Unknown installer `{primary_installer}`.")
+                raise DbtenvError(f"Unknown installer `{primary_installer}`.")
 
         versions = list(distinct_versions)
         versions.sort()

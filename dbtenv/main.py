@@ -4,6 +4,7 @@ import sys
 from typing import List
 
 import dbtenv
+from dbtenv import Args, DbtenvError, DbtError, Environment, Installer
 import dbtenv.execute
 import dbtenv.install
 import dbtenv.uninstall
@@ -21,7 +22,7 @@ class ExitCode(IntEnum):
     INTERRUPTED = 2
 
 
-def build_root_args_parser(env: dbtenv.Environment) -> argparse.ArgumentParser:
+def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
     common_args_parser = build_common_args_parser(env)
     root_args_parser = argparse.ArgumentParser(
         description=f"""
@@ -38,7 +39,7 @@ def build_root_args_parser(env: dbtenv.Environment) -> argparse.ArgumentParser:
     return root_args_parser
 
 
-def build_common_args_parser(env: dbtenv.Environment, dest_prefix: str = '') -> argparse.ArgumentParser:
+def build_common_args_parser(env: Environment, dest_prefix: str = '') -> argparse.ArgumentParser:
     common_args_parser = argparse.ArgumentParser(add_help=False)
     common_args_parser.add_argument(
         '--debug',
@@ -55,8 +56,8 @@ def build_common_args_parser(env: dbtenv.Environment, dest_prefix: str = '') -> 
         common_args_parser.add_argument(
             '--installer',
             dest=f'{dest_prefix}installer',
-            type=dbtenv.Installer,
-            choices=dbtenv.Installer,
+            type=Installer,
+            choices=Installer,
             help=f"""
                 Which installer to use.
                 The default is pip, but that can be overridden by setting a {dbtenv.DEFAULT_INSTALLER_VAR} environment variable.
@@ -65,7 +66,7 @@ def build_common_args_parser(env: dbtenv.Environment, dest_prefix: str = '') -> 
     return common_args_parser
 
 
-def build_common_install_args_parser(env: dbtenv.Environment) -> argparse.ArgumentParser:
+def build_common_install_args_parser(env: Environment) -> argparse.ArgumentParser:
     common_install_args_parser = argparse.ArgumentParser(add_help=False)
     common_install_args_parser.add_argument(
         '--python',
@@ -96,7 +97,7 @@ def main(args: List[str] = None) -> None:
 
         logger.debug(f"Arguments = {args}")
 
-        env = dbtenv.Environment()
+        env = Environment()
 
         versions_subcommand = dbtenv.versions.VersionsSubcommand(env)
         install_subcommand = dbtenv.install.InstallSubcommand(env)
@@ -116,7 +117,7 @@ def main(args: List[str] = None) -> None:
         execute_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser, common_install_args_parser])
         uninstall_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser])
 
-        parsed_args = dbtenv.Args()
+        parsed_args = Args()
         args_parser.parse_args(args, namespace=parsed_args)
 
         debug = parsed_args.debug or parsed_args.get('subcommand_debug')
@@ -155,11 +156,11 @@ def main(args: List[str] = None) -> None:
         elif subcommand == uninstall_subcommand.name:
             uninstall_subcommand.execute(parsed_args)
         else:
-            raise dbtenv.DbtenvError(f"Unknown sub-command `{subcommand}`.")
-    except dbtenv.DbtenvError as error:
+            raise DbtenvError(f"Unknown sub-command `{subcommand}`.")
+    except DbtenvError as error:
         logger.error(error)
         sys.exit(ExitCode.FAILURE)
-    except dbtenv.DbtError as dbt_error:
+    except DbtError as dbt_error:
         logger.debug(dbt_error)
         sys.exit(dbt_error.exit_code)
     except KeyboardInterrupt:

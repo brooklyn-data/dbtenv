@@ -2,6 +2,7 @@ import argparse
 from typing import List
 
 import dbtenv
+from dbtenv import Args, DbtenvError, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.venv
 
@@ -9,7 +10,7 @@ import dbtenv.venv
 logger = dbtenv.LOGGER
 
 
-class UninstallSubcommand(dbtenv.Subcommand):
+class UninstallSubcommand(Subcommand):
     """Uninstall the specified dbt version."""
 
     name = 'uninstall'
@@ -29,15 +30,15 @@ class UninstallSubcommand(dbtenv.Subcommand):
         )
         parser.add_argument(
             'dbt_version',
-            type=dbtenv.Version,
+            type=Version,
             metavar='<dbt_version>',
             help="Exact version of dbt to uninstall."
         )
 
-    def execute(self, args: dbtenv.Args) -> None:
+    def execute(self, args: Args) -> None:
         uninstall_all           = not self.env.installer
-        only_uninstall_venv     = self.env.installer == dbtenv.Installer.PIP
-        only_uninstall_homebrew = self.env.installer == dbtenv.Installer.HOMEBREW
+        only_uninstall_venv     = self.env.installer == Installer.PIP
+        only_uninstall_homebrew = self.env.installer == Installer.HOMEBREW
         uninstall_venv          = uninstall_all or only_uninstall_venv
         uninstall_homebrew      = (uninstall_all or only_uninstall_homebrew) and self.env.homebrew_installed
 
@@ -56,4 +57,4 @@ class UninstallSubcommand(dbtenv.Subcommand):
                 attempted_uninstalls += 1
 
         if attempted_uninstalls == 0:
-            raise dbtenv.DbtenvError(f"No dbt {args.dbt_version} installation found.")
+            raise DbtenvError(f"No dbt {args.dbt_version} installation found.")

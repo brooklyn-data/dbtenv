@@ -2,6 +2,7 @@ import argparse
 from typing import List
 
 import dbtenv
+from dbtenv import Args, DbtenvError, Subcommand, Version
 import dbtenv.install
 import dbtenv.version
 import dbtenv.which
@@ -10,7 +11,7 @@ import dbtenv.which
 logger = dbtenv.LOGGER
 
 
-class ExecuteSubcommand(dbtenv.Subcommand):
+class ExecuteSubcommand(Subcommand):
     """Execute a dbt command using the specified dbt version or the dbt version automatically detected from the environment."""
 
     name = 'execute'
@@ -31,7 +32,7 @@ class ExecuteSubcommand(dbtenv.Subcommand):
         parser.add_argument(
             '--dbt',
             dest='dbt_version',
-            type=dbtenv.Version,
+            type=Version,
             metavar='<dbt_version>',
             help="""
                 Exact version of dbt to execute.
@@ -49,7 +50,7 @@ class ExecuteSubcommand(dbtenv.Subcommand):
             """
         )
 
-    def execute(self, args: dbtenv.Args) -> None:
+    def execute(self, args: Args) -> None:
         if args.dbt_version:
             version = args.dbt_version
         else:
@@ -57,7 +58,7 @@ class ExecuteSubcommand(dbtenv.Subcommand):
             if version:
                 logger.info(f"Using dbt {version} (set by {version.source}).")
             else:
-                raise dbtenv.DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+                raise DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:
@@ -65,6 +66,6 @@ class ExecuteSubcommand(dbtenv.Subcommand):
                 dbtenv.install.install_dbt(self.env, version)
                 dbt = dbtenv.which.get_dbt(self.env, version)
             else:
-                raise dbtenv.DbtenvError(f"No dbt {version} installation found and auto-install is not enabled.")
+                raise DbtenvError(f"No dbt {version} installation found and auto-install is not enabled.")
 
         dbt.execute(args.dbt_args)
