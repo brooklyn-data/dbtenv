@@ -3,6 +3,7 @@ from typing import List
 
 import dbtenv
 import dbtenv.install
+import dbtenv.version
 import dbtenv.which
 
 
@@ -52,11 +53,11 @@ class ExecuteSubcommand(dbtenv.Subcommand):
         if args.dbt_version:
             version = args.dbt_version
         else:
-            version, version_source = self.env.try_get_version_and_source()
+            version = dbtenv.version.try_get_version(self.env)
             if version:
-                logger.info(f"Using dbt {version} (set by {version_source}).")
+                logger.info(f"Using dbt {version} (set by {version.source}).")
             else:
-                raise dbtenv.DbtenvError("No dbt version has been set globally, for the local directory, or for the current shell.")
+                raise dbtenv.DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:

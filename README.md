@@ -44,15 +44,18 @@ Some tips when dbtenv is using pip:
 dbtenv determines which dbt version to use by trying to read it from the following sources, in this order, using the first one it finds:
 
 1. The `dbtenv execute` command's optional `--dbt <version>` argument.
-2. The `DBT_VERSION` environment variable.
-3. The first `.dbt_version` file found by searching in the current directory and then in each successive parent directory.
-4. The `~/.dbt/version` file.
+2. A `DBT_VERSION` environment variable.
+3. A `.dbt_version` file in the dbt project directory.
+4. The [dbt version requirements](https://docs.getdbt.com/reference/project-configs/require-dbt-version/) of the dbt project and any dbt packages it uses.
+   - If the dbt version requirements specify a range of versions rather than an exact version, then dbtenv will try to read a preferred dbt version from the sources below and will use that version if it's compatible with the requirements.
+5. The first `.dbt_version` file found by searching the dbt project's parent directories.
+6. The `~/.dbt/version` file.
 
 You can:
-- Run `dbtenv version --global <version>` to set the dbt version globally in the `~/.dbt/version` file.
-- Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file.
 - Run `dbtenv version` to show which dbt version dbtenv determines dynamically based on the current environment.
 - Run `dbtenv which` to show the full path to the executable of the dbt version dbtenv determines dynamically based on the current environment.
+- Run `dbtenv version --global <version>` to set the dbt version globally in the `~/.dbt/version` file.
+- Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file.
 
 ### Running dbt versions
 Run `dbtenv execute -- <dbt arguments>` to execute the dbt version determined dynamically based on the current environment, or run `dbtenv execute --dbt <version> -- <dbt arguments>` to execute the specified dbt version.

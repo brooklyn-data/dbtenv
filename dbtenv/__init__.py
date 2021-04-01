@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 
 VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
@@ -64,14 +64,18 @@ class Installer(Enum):
 
 
 class Version(distutils.version.LooseVersion):
-    def __init__(self, version: str) -> None:
-        self.pypi_version = self.homebrew_version = self.raw_version = version
+    def __init__(self, version: str, source: Optional[str] = None) -> None:
+        self.pypi_version = self.homebrew_version = self.raw_version = version.strip()
+        self.source = source
+
+        version_match = re.match(r'(?P<version>\d+\.\d+\.\d+)(-?(?P<prerelease>[a-z].*))?', self.raw_version)
+        self.is_semantic = version_match is not None
+        self.is_stable = version_match is not None and not version_match['prerelease']
 
         # dbt pre-release versions are formatted slightly differently in PyPI and Homebrew.
-        prerelease_match = re.match(r'(?P<version>\d+(\.\d+)+)-?(?P<prerelease>[a-z].*)', version)
-        if prerelease_match:
-            self.pypi_version     = f"{prerelease_match['version']}{prerelease_match['prerelease']}"
-            self.homebrew_version = f"{prerelease_match['version']}-{prerelease_match['prerelease']}"
+        if version_match and version_match['prerelease']:
+            self.pypi_version     = f"{version_match['version']}{version_match['prerelease']}"
+            self.homebrew_version = f"{version_match['version']}-{version_match['prerelease']}"
 
         # Standardize on the PyPI version for comparison and hashing.
         super().__init__(self.pypi_version)
@@ -123,6 +127,9 @@ class Environment:
         self.env_vars = os.environ
 
         self.working_directory = os.getcwd()
+
+        self.project_file = self.find_file_along_working_path('dbt_project.yml')
+        self.project_directory = os.path.dirname(self.project_file) if self.project_file else None
 
         self.venvs_directory     = os.path.expanduser(VENVS_DIRECTORY)
         self.global_version_file = os.path.expanduser(GLOBAL_VERSION_FILE)
@@ -230,38 +237,12 @@ class Environment:
     def simulate_release_date(self, value: bool) -> None:
         self._simulate_release_date = value
 
-    def try_get_version_and_source(self) -> Tuple[Optional[Version], Optional[str]]:
-        shell_version = self.try_get_shell_version()
-        if shell_version:
-            return shell_version, f"{DBT_VERSION_VAR} environment variable"
-
-        local_version, version_file = self.try_get_local_version_and_source()
-        if local_version:
-            return local_version, f"`{version_file}`"
-
-        global_version = self.try_get_global_version()
-        if global_version:
-            return global_version, f"`{self.global_version_file}`"
-
-        return None, None
-
-    def try_get_global_version(self) -> Optional[Version]:
-        if os.path.isfile(self.global_version_file):
-            return self._read_version_file(self.global_version_file)
-
-        return None
-
-    def set_global_version(self, version: Version) -> None:
-        self._write_version_file(self.global_version_file, version)
-        logger.info(f"{version} is now set as the global dbt version in `{self.global_version_file}`.")
-
-    def try_get_local_version_and_source(self) -> Tuple[Optional[Version], Optional[str]]:
+    def find_file_along_working_path(self, file_name: str) -> Optional[str]:
         search_dir = self.working_directory
         while True:
-            version_file = os.path.join(search_dir, LOCAL_VERSION_FILE)
-            if os.path.isfile(version_file):
-                version = self._read_version_file(version_file)
-                return version, version_file
+            file_path = os.path.join(search_dir, file_name)
+            if os.path.isfile(file_path):
+                return file_path
 
             parent_dir = os.path.dirname(search_dir)
             if parent_dir == search_dir:
@@ -269,27 +250,7 @@ class Environment:
 
             search_dir = parent_dir
 
-        return None, None
-
-    def set_local_version(self, version: Version) -> None:
-        version_file = os.path.join(self.working_directory, LOCAL_VERSION_FILE)
-        self._write_version_file(version_file, version)
-        logger.info(f"{version} is now set as the local dbt version in `{version_file}`.")
-
-
-    def try_get_shell_version(self) -> Optional[Version]:
-        if DBT_VERSION_VAR in self.env_vars:
-            return Version(self.env_vars[DBT_VERSION_VAR])
-
         return None
-
-    def _read_version_file(self, file_path: str) -> Version:
-        with open(file_path, 'r') as file:
-            return Version(file.readline().strip())
-
-    def _write_version_file(self, file_path: str, version: Version) -> None:
-        with open(file_path, 'w') as file:
-            file.write(str(version))
 
 
 class Subcommand(AbstractBaseClass):

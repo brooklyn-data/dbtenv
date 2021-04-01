@@ -4,6 +4,7 @@ from typing import List, Optional
 import dbtenv
 import dbtenv.homebrew
 import dbtenv.venv
+import dbtenv.version
 
 
 logger = dbtenv.LOGGER
@@ -43,11 +44,11 @@ class WhichSubcommand(dbtenv.Subcommand):
         if args.dbt_version:
             version = args.dbt_version
         else:
-            version, version_source = self.env.try_get_version_and_source()
+            version = dbtenv.version.try_get_version(self.env)
             if version:
-                logger.info(f"Using dbt {version} (set by {version_source}).")
+                logger.info(f"Using dbt {version} (set by {version.source}).")
             else:
-                logger.info("No dbt version has been set globally, for the local directory, or for the current shell.")
+                logger.info("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
 
         if version:
             print(get_dbt(self.env, version).get_executable())
