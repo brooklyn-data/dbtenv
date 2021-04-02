@@ -85,12 +85,12 @@ class VenvDbt(Dbt):
         if python_version_result.returncode != 0:
             raise DbtenvError(f"Failed to run `{python}`.")
         python_version_output = python_version_result.stdout.decode('utf-8').strip()
-        python_version_match = re.search(r'(\d+)\.(\d+)\.\d+', python_version_output)
+        python_version_match = re.search(r'(?P<major_version>\d+)\.(?P<minor_version>\d+)\.\d+', python_version_output)
         if not python_version_match:
             raise DbtenvError(f"No Python version number found in \"{python_version_output}\".")
         python_version = python_version_match[0]
-        python_major_version = int(python_version_match[1])
-        python_minor_version = int(python_version_match[2])
+        python_major_version = int(python_version_match['major_version'])
+        python_minor_version = int(python_version_match['minor_version'])
 
         if (python_major_version, python_minor_version) >= (3, 9):
             raise DbtenvError(

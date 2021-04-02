@@ -35,7 +35,7 @@ class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         logger.debug(f"Handling pypi.org request:  {self.requestline}")
-        package_match = re.search(r'^/simple/([^/]+)', self.path)
+        package_match = re.search(r'^/simple/(?P<package>[^/]+)', self.path)
 
         passthrough_request_headers = {
             header: value
@@ -57,7 +57,7 @@ class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(pypi_response_body)
             return
 
-        package = package_match[1]
+        package = package_match['package']
         package_metadata = get_pypi_package_metadata(package)
         excluded_file_names = set(
             file['filename']
@@ -65,15 +65,16 @@ class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
             for file in files
             if file['upload_time'][:10] > self.date
         )
+        file_link_pattern = r'<a href=[^>]+>(?P<file_name>[^<]+)</a>'
         excluded_file_link_count = 0
         def exclude_file_links(link_match: re.Match) -> str:
             nonlocal excluded_file_link_count
-            if link_match[1].strip() in excluded_file_names:
+            if link_match['file_name'].strip() in excluded_file_names:
                 excluded_file_link_count += 1
                 return ''
             else:
                 return link_match[0]
-        modified_response_body = re.sub(r'<a href=[^>]+>([^<]+)</a>', exclude_file_links, pypi_response_body.decode('utf-8')).encode('utf-8')
+        modified_response_body = re.sub(file_link_pattern, exclude_file_links, pypi_response_body.decode('utf-8')).encode('utf-8')
         logger.debug(f"Excluded {excluded_file_link_count} files for {package} after {self.date}.")
 
         self.send_response(pypi_response_status)
