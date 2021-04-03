@@ -183,6 +183,18 @@ class Environment:
     def installer(self, value: Installer) -> None:
         self._installer = value
 
+    @property
+    def primary_installer(self) -> Installer:
+        return self.installer or self.default_installer
+
+    @property
+    def use_venv(self) -> bool:
+        return not self.installer or self.installer == Installer.PIP
+
+    @property
+    def use_homebrew(self) -> bool:
+        return (not self.installer or self.installer == Installer.HOMEBREW) and self.homebrew_installed
+
     _python: Optional[str] = None
 
     @property

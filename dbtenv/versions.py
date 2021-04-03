@@ -32,27 +32,20 @@ class VersionsSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
-        primary_installer = self.env.installer or self.env.default_installer
-        use_any_installer = not self.env.installer
-        only_use_venv     = self.env.installer == Installer.PIP
-        only_use_homebrew = self.env.installer == Installer.HOMEBREW
-        use_venv          = use_any_installer or only_use_venv
-        use_homebrew      = (use_any_installer or only_use_homebrew) and self.env.homebrew_installed
-
         installed_versions: Set[Version] = set()
-        if use_venv:
+        if self.env.use_venv:
             installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(self.env))
-        if use_homebrew:
+        if self.env.use_homebrew:
             installed_versions.update(dbtenv.homebrew.get_installed_homebrew_dbt_versions(self.env))
 
         distinct_versions = installed_versions.copy()
         if not args.installed:
-            if primary_installer == Installer.PIP:
+            if self.env.primary_installer == Installer.PIP:
                 distinct_versions.update(dbtenv.pypi.get_pypi_dbt_versions())
-            elif primary_installer == Installer.HOMEBREW:
+            elif self.env.primary_installer == Installer.HOMEBREW:
                 distinct_versions.update(dbtenv.homebrew.get_homebrew_dbt_versions())
             else:
-                raise DbtenvError(f"Unknown installer `{primary_installer}`.")
+                raise DbtenvError(f"Unknown installer `{self.env.primary_installer}`.")
 
         versions = list(distinct_versions)
         versions.sort()
@@ -63,7 +56,7 @@ class VersionsSubcommand(Subcommand):
             for version in versions:
                 line = "+ " if version in installed_versions else "  "
                 line += "* " if version == active_version else "  "
-                line += version.get_installer_version(primary_installer)
+                line += version.get_installer_version(self.env.primary_installer)
                 if version == active_version:
                     line += f"  (set by {active_version.source})"
                 print(line)

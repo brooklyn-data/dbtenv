@@ -247,17 +247,10 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         else:
             return preferred_version
 
-    primary_installer = env.installer or env.default_installer
-    use_any_installer = not env.installer
-    only_use_venv     = env.installer == Installer.PIP
-    only_use_homebrew = env.installer == Installer.HOMEBREW
-    use_venv          = use_any_installer or only_use_venv
-    use_homebrew      = (use_any_installer or only_use_homebrew) and env.homebrew_installed
-
     installed_versions: Set[Version] = set()
-    if use_venv:
+    if env.use_venv:
         installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(env))
-    if use_homebrew:
+    if env.use_homebrew:
         installed_versions.update(dbtenv.homebrew.get_installed_homebrew_dbt_versions(env))
 
     compatible_version = try_get_max_compatible_version(installed_versions, version_requirements)
@@ -267,9 +260,9 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         logger.info("No installed versions are compatible with all version requirements in the dbt project.")
 
     installable_versions: List[Version] = []
-    if primary_installer == Installer.PIP:
+    if env.primary_installer == Installer.PIP:
         installable_versions = dbtenv.pypi.get_pypi_dbt_versions()
-    elif primary_installer == Installer.HOMEBREW:
+    elif env.primary_installer == Installer.HOMEBREW:
         installable_versions = dbtenv.homebrew.get_homebrew_dbt_versions()
     compatible_version = try_get_max_compatible_version(installable_versions, version_requirements)
     if compatible_version:

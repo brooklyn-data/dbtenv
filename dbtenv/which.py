@@ -56,39 +56,30 @@ class WhichSubcommand(Subcommand):
 
 
 def get_dbt(env: Environment, version: Version) -> Dbt:
-    primary_installer = env.installer or env.default_installer
-    use_any_installer = not env.installer
-    only_use_venv     = env.installer == Installer.PIP
-    only_use_homebrew = env.installer == Installer.HOMEBREW
-    use_venv          = use_any_installer or only_use_venv
-    use_homebrew      = (use_any_installer or only_use_homebrew) and env.homebrew_installed
-    prefer_venv       = primary_installer == Installer.PIP
-    prefer_homebrew   = primary_installer == Installer.HOMEBREW
-
     error = DbtenvError(f"No dbt {version} executable found.")
 
     venv_dbt = None
-    if use_venv:
+    if env.use_venv:
         venv_dbt = dbtenv.venv.VenvDbt(env, version)
         try:
             venv_dbt.get_executable()  # Raises an appropriate error if it's not installed.
-            if prefer_venv:
+            if env.primary_installer == Installer.PIP:
                 return venv_dbt
         except DbtenvError as venv_error:
-            if only_use_venv:
+            if env.installer == Installer.PIP:
                 raise
             else:
                 error = venv_error
 
-    if use_homebrew:
+    if env.use_homebrew:
         homebrew_dbt = dbtenv.homebrew.HomebrewDbt(env, version)
         try:
             homebrew_dbt.get_executable()  # Raises an appropriate error if it's not installed.
             return homebrew_dbt
         except DbtenvError as homebrew_error:
-            if only_use_homebrew:
+            if env.installer == Installer.HOMEBREW:
                 raise
-            elif prefer_homebrew:
+            elif env.primary_installer == Installer.HOMEBREW:
                 error = homebrew_error
 
     if venv_dbt and venv_dbt.is_installed():

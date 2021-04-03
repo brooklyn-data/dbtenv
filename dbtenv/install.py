@@ -59,25 +59,23 @@ class InstallSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
-        installer = self.env.installer or self.env.default_installer
-        if installer == Installer.PIP:
+        if self.env.primary_installer == Installer.PIP:
             venv_dbt = dbtenv.venv.VenvDbt(self.env, args.dbt_version)
             venv_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
-        elif installer == Installer.HOMEBREW:
+        elif self.env.primary_installer == Installer.HOMEBREW:
             homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, args.dbt_version)
             homebrew_dbt.install(force=args.force)
         else:
-            raise DbtenvError(f"Unknown installer `{installer}`.")
+            raise DbtenvError(f"Unknown installer `{self.env.primary_installer}`.")
 
 
 def install_dbt(env: Environment, version: Version) -> None:
-    installer = env.installer or env.default_installer
-    if installer == Installer.PIP:
+    if env.primary_installer == Installer.PIP:
         dbtenv.venv.VenvDbt(env, version).install()
-    elif installer == Installer.HOMEBREW:
+    elif env.primary_installer == Installer.HOMEBREW:
         dbtenv.homebrew.HomebrewDbt(env, version).install()
     else:
-        raise DbtenvError(f"Unknown installer `{installer}`.")
+        raise DbtenvError(f"Unknown installer `{env.primary_installer}`.")
 
 
 def ensure_dbt_is_installed(env: Environment, version: Version) -> None:
