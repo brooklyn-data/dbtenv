@@ -54,11 +54,8 @@ class ExecuteSubcommand(Subcommand):
         if args.dbt_version:
             version = args.dbt_version
         else:
-            version = dbtenv.version.try_get_version(self.env)
-            if version:
-                logger.info(f"Using dbt {version} (set by {version.source}).")
-            else:
-                raise DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+            version = dbtenv.version.get_version(self.env)
+            logger.info(f"Using dbt {version} (set by {version.source}).")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:

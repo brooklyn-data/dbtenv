@@ -5,6 +5,7 @@ import dbtenv
 from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.venv
+import dbtenv.version
 import dbtenv.which
 
 
@@ -34,9 +35,13 @@ class InstallSubcommand(Subcommand):
         )
         parser.add_argument(
             'dbt_version',
+            nargs='?',
             type=Version,
             metavar='<dbt_version>',
-            help="Exact version of dbt to install."
+            help="""
+                Exact version of dbt to install.
+                If not specified, the dbt version will be automatically detected from the environment.
+            """
         )
         parser.add_argument(
             'package_location',
@@ -59,11 +64,17 @@ class InstallSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
+        if args.dbt_version:
+            version = args.dbt_version
+        else:
+            version = dbtenv.version.get_version(self.env)
+            logger.info(f"Using dbt {version} (set by {version.source}).")
+
         if self.env.primary_installer == Installer.PIP:
-            venv_dbt = dbtenv.venv.VenvDbt(self.env, args.dbt_version)
+            venv_dbt = dbtenv.venv.VenvDbt(self.env, version)
             venv_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
         elif self.env.primary_installer == Installer.HOMEBREW:
-            homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, args.dbt_version)
+            homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, version)
             homebrew_dbt.install(force=args.force)
         else:
             raise DbtenvError(f"Unknown installer `{self.env.primary_installer}`.")

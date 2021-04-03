@@ -7,7 +7,7 @@ import traceback
 from typing import Collection, List, Optional, Set
 
 import dbtenv
-from dbtenv import Args, Environment, Installer, Subcommand, Version
+from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.install
 import dbtenv.pypi
@@ -273,7 +273,7 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         return None
 
 
-def try_get_version(env: Environment) -> Optional[Version]:
+def get_version(env: Environment) -> Version:
     shell_version = try_get_shell_version(env)
     if shell_version:
         return shell_version
@@ -292,4 +292,14 @@ def try_get_version(env: Environment) -> Optional[Version]:
         if project_version:
             return project_version
 
-    return preferred_version
+    if preferred_version:
+        return preferred_version
+
+    raise DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+
+
+def try_get_version(env: Environment) -> Optional[Version]:
+    try:
+        return get_version(env)
+    except:
+        return None
