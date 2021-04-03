@@ -91,5 +91,6 @@ def get_dbt(env: Environment, version: Version) -> Dbt:
 def try_get_dbt(env: Environment, version: Version) -> Optional[Dbt]:
     try:
         return get_dbt(env, version)
-    except:
+    except Exception as error:
+        logger.debug(f"Error getting dbt:  {error}")
         return None

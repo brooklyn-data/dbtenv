@@ -301,7 +301,8 @@ class Dbt(AbstractBaseClass):
     def try_get_executable(self) -> Optional[str]:
         try:
             return self.get_executable()
-        except:
+        except Exception as error:
+            logger.debug(f"Error getting executable:  {error}")
             return None
 
     def execute(self, args: List[str]) -> None:

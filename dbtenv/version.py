@@ -301,5 +301,6 @@ def get_version(env: Environment) -> Version:
 def try_get_version(env: Environment) -> Optional[Version]:
     try:
         return get_version(env)
-    except:
+    except Exception as error:
+        logger.debug(f"Error getting version:  {error}")
         return None
