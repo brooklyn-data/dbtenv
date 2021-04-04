@@ -4,14 +4,15 @@ import json
 import os.path
 import re
 import traceback
-from typing import Collection, List, Optional, Set
+from typing import Collection, List, Optional
 
 import dbtenv
-from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
+from dbtenv import Args, DbtenvError, Environment, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.install
 import dbtenv.pypi
 import dbtenv.venv
+import dbtenv.versions
 
 
 logger = dbtenv.LOGGER
@@ -247,23 +248,14 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         else:
             return preferred_version
 
-    installed_versions: Set[Version] = set()
-    if env.use_venv:
-        installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(env))
-    if env.use_homebrew:
-        installed_versions.update(dbtenv.homebrew.get_installed_homebrew_dbt_versions(env))
-
+    installed_versions = dbtenv.versions.get_installed_versions(env)
     compatible_version = try_get_max_compatible_version(installed_versions, version_requirements)
     if compatible_version:
         return Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
     else:
         logger.info("No installed versions are compatible with all version requirements in the dbt project.")
 
-    installable_versions: List[Version] = []
-    if env.primary_installer == Installer.PIP:
-        installable_versions = dbtenv.pypi.get_pypi_dbt_versions()
-    elif env.primary_installer == Installer.HOMEBREW:
-        installable_versions = dbtenv.homebrew.get_homebrew_dbt_versions()
+    installable_versions = dbtenv.versions.get_installable_versions(env)
     compatible_version = try_get_max_compatible_version(installable_versions, version_requirements)
     if compatible_version:
         logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in the dbt project.")

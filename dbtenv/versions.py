@@ -2,7 +2,7 @@ import argparse
 from typing import List, Set
 
 import dbtenv
-from dbtenv import Args, DbtenvError, Installer, Subcommand, Version
+from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.pypi
 import dbtenv.venv
@@ -32,20 +32,11 @@ class VersionsSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
-        installed_versions: Set[Version] = set()
-        if self.env.use_venv:
-            installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(self.env))
-        if self.env.use_homebrew:
-            installed_versions.update(dbtenv.homebrew.get_installed_homebrew_dbt_versions(self.env))
+        installed_versions = get_installed_versions(self.env)
 
         distinct_versions = installed_versions.copy()
         if not args.installed:
-            if self.env.primary_installer == Installer.PIP:
-                distinct_versions.update(dbtenv.pypi.get_pypi_dbt_versions())
-            elif self.env.primary_installer == Installer.HOMEBREW:
-                distinct_versions.update(dbtenv.homebrew.get_homebrew_dbt_versions())
-            else:
-                raise DbtenvError(f"Unknown installer `{self.env.primary_installer}`.")
+            distinct_versions.update(get_installable_versions(self.env))
 
         versions = list(distinct_versions)
         versions.sort()
@@ -62,3 +53,21 @@ class VersionsSubcommand(Subcommand):
                 print(line)
         else:
             logger.info(f"No dbt installations found.")
+
+
+def get_installed_versions(env: Environment) -> Set[Version]:
+    installed_versions = set()
+    if env.use_venv:
+        installed_versions.update(dbtenv.venv.get_installed_venv_dbt_versions(env))
+    if env.use_homebrew:
+        installed_versions.update(dbtenv.homebrew.get_installed_homebrew_dbt_versions(env))
+    return installed_versions
+
+
+def get_installable_versions(env: Environment) -> List[Version]:
+    if env.primary_installer == Installer.PIP:
+        return dbtenv.pypi.get_pypi_dbt_versions()
+    elif env.primary_installer == Installer.HOMEBREW:
+        return dbtenv.homebrew.get_homebrew_dbt_versions()
+    else:
+        raise DbtenvError(f"Unknown installer `{env.primary_installer}`.")
