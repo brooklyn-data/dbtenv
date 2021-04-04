@@ -67,8 +67,9 @@ class VenvDbt(Dbt):
                 pip_filter_port = pip_filter_server.socket.getsockname()[1]
                 threading.Thread(target=pip_filter_server.serve_forever, daemon=True).start()
                 pip_args.extend(['--index-url', f'http://localhost:{pip_filter_port}/simple'])
-            else:
-                # agate 1.6.2 introduced a dependency on PyICU which causes installation problems, so exclude that.
+            elif self.version < Version('0.19.1'):
+                # Versions prior to 0.19.1 just specified agate>=1.6, but agate 1.6.2 introduced a dependency on PyICU
+                # which causes installation problems, so exclude that like versions 0.19.1 and above do.
                 pip_args.append('agate>=1.6,<1.6.2')
             pip_args.append(f'dbt=={self.version.pypi_version}')
         logger.info(f"Installing dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
