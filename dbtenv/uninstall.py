@@ -36,21 +36,15 @@ class UninstallSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
-        uninstall_all           = not self.env.installer
-        only_uninstall_venv     = self.env.installer == Installer.PIP
-        only_uninstall_homebrew = self.env.installer == Installer.HOMEBREW
-        uninstall_venv          = uninstall_all or only_uninstall_venv
-        uninstall_homebrew      = (uninstall_all or only_uninstall_homebrew) and self.env.homebrew_installed
-
         attempted_uninstalls = 0
 
-        if uninstall_venv:
+        if self.env.use_venv:
             venv_dbt = dbtenv.venv.VenvDbt(self.env, args.dbt_version)
             if venv_dbt.is_installed():
                 venv_dbt.uninstall(force=args.force)
                 attempted_uninstalls += 1
 
-        if uninstall_homebrew:
+        if self.env.use_homebrew:
             homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, args.dbt_version)
             if homebrew_dbt.is_installed():
                 homebrew_dbt.uninstall(force=args.force)
