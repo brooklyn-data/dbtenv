@@ -26,7 +26,7 @@ def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
     common_args_parser = build_common_args_parser(env)
     root_args_parser = argparse.ArgumentParser(
         description=f"""
-            Lets you easily install and switch between multiple versions of dbt using pip with Python virtual environments,
+            Lets you easily install and run multiple versions of dbt using pip with Python virtual environments,
             or optionally using Homebrew on Mac or Linux.
             Any dbt version-specific Python virtual environments are created under `{dbtenv.VENVS_DIRECTORY}`.
             The dbt version to use can be configured in your shell using a {dbtenv.DBT_VERSION_VAR} environment variable,

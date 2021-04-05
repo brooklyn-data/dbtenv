@@ -13,6 +13,8 @@ import sys
 from typing import Any, List, Optional
 
 
+__version__ = '1.0.0'
+
 VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
 
 GLOBAL_VERSION_FILE = os.path.normpath('~/.dbt/version')
