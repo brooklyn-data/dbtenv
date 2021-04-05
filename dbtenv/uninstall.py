@@ -2,7 +2,7 @@ import argparse
 from typing import List
 
 import dbtenv
-from dbtenv import Args, DbtenvError, Installer, Subcommand, Version
+from dbtenv import Args, DbtenvError, Subcommand, Version
 import dbtenv.homebrew
 import dbtenv.venv
 
