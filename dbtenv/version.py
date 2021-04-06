@@ -8,10 +8,7 @@ from typing import Collection, List, Optional
 
 import dbtenv
 from dbtenv import Args, DbtenvError, Environment, Subcommand, Version
-import dbtenv.homebrew
 import dbtenv.install
-import dbtenv.pypi
-import dbtenv.venv
 import dbtenv.versions
 
 

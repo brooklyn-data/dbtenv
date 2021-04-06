@@ -4,7 +4,7 @@ from typing import List, Optional
 import dbtenv
 from dbtenv import Args, Dbt, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
-import dbtenv.venv
+import dbtenv.pip
 import dbtenv.version
 
 
@@ -58,18 +58,18 @@ class WhichSubcommand(Subcommand):
 def get_dbt(env: Environment, version: Version) -> Dbt:
     error = DbtenvError(f"No dbt {version} executable found.")
 
-    venv_dbt = None
-    if env.use_venv:
-        venv_dbt = dbtenv.venv.VenvDbt(env, version)
+    pip_dbt = None
+    if env.use_pip:
+        pip_dbt = dbtenv.pip.PipDbt(env, version)
         try:
-            venv_dbt.get_executable()  # Raises an appropriate error if it's not installed.
+            pip_dbt.get_executable()  # Raises an appropriate error if it's not installed.
             if env.primary_installer == Installer.PIP:
-                return venv_dbt
-        except DbtenvError as venv_error:
+                return pip_dbt
+        except DbtenvError as pip_error:
             if env.installer == Installer.PIP:
                 raise
             else:
-                error = venv_error
+                error = pip_error
 
     if env.use_homebrew:
         homebrew_dbt = dbtenv.homebrew.HomebrewDbt(env, version)
@@ -82,8 +82,8 @@ def get_dbt(env: Environment, version: Version) -> Dbt:
             elif env.primary_installer == Installer.HOMEBREW:
                 error = homebrew_error
 
-    if venv_dbt and venv_dbt.is_installed():
-        return venv_dbt
+    if pip_dbt and pip_dbt.is_installed():
+        return pip_dbt
 
     raise error
 

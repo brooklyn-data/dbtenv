@@ -4,7 +4,7 @@ from typing import List
 import dbtenv
 from dbtenv import Args, DbtenvError, Subcommand, Version
 import dbtenv.homebrew
-import dbtenv.venv
+import dbtenv.pip
 
 
 logger = dbtenv.LOGGER
@@ -38,10 +38,10 @@ class UninstallSubcommand(Subcommand):
     def execute(self, args: Args) -> None:
         attempted_uninstalls = 0
 
-        if self.env.use_venv:
-            venv_dbt = dbtenv.venv.VenvDbt(self.env, args.dbt_version)
-            if venv_dbt.is_installed():
-                venv_dbt.uninstall(force=args.force)
+        if self.env.use_pip:
+            pip_dbt = dbtenv.pip.PipDbt(self.env, args.dbt_version)
+            if pip_dbt.is_installed():
+                pip_dbt.uninstall(force=args.force)
                 attempted_uninstalls += 1
 
         if self.env.use_homebrew:

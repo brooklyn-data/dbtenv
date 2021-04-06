@@ -190,7 +190,7 @@ class Environment:
         return self.installer or self.default_installer
 
     @property
-    def use_venv(self) -> bool:
+    def use_pip(self) -> bool:
         return not self.installer or self.installer == Installer.PIP
 
     @property

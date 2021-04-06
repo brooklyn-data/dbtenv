@@ -4,7 +4,7 @@ from typing import List
 import dbtenv
 from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew
-import dbtenv.venv
+import dbtenv.pip
 import dbtenv.version
 import dbtenv.which
 
@@ -71,8 +71,8 @@ class InstallSubcommand(Subcommand):
             logger.info(f"Using dbt {version} (set by {version.source}).")
 
         if self.env.primary_installer == Installer.PIP:
-            venv_dbt = dbtenv.venv.VenvDbt(self.env, version)
-            venv_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
+            pip_dbt = dbtenv.pip.PipDbt(self.env, version)
+            pip_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
         elif self.env.primary_installer == Installer.HOMEBREW:
             homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, version)
             homebrew_dbt.install(force=args.force)
@@ -82,7 +82,7 @@ class InstallSubcommand(Subcommand):
 
 def install_dbt(env: Environment, version: Version) -> None:
     if env.primary_installer == Installer.PIP:
-        dbtenv.venv.VenvDbt(env, version).install()
+        dbtenv.pip.PipDbt(env, version).install()
     elif env.primary_installer == Installer.HOMEBREW:
         dbtenv.homebrew.HomebrewDbt(env, version).install()
     else:
