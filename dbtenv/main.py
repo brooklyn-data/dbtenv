@@ -36,6 +36,12 @@ def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
         parents=[common_args_parser],
         epilog="Run a sub-command with the --help option to see help for that sub-command."
     )
+    root_args_parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s {dbtenv.__version__}',
+        help="Show %(prog)s version and exit."
+    )
     return root_args_parser
 
 
