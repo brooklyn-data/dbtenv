@@ -310,9 +310,25 @@ class Dbt(AbstractBaseClass):
     def execute(self, args: List[str]) -> None:
         executable = self.get_executable()
         logger.debug(f"Running `{executable}` with arguments {args}.")
-        dbt_result = subprocess.run([executable, *args])
-        if dbt_result.returncode != 0:
-            raise DbtError(dbt_result.returncode)
+        # We don't use subprocess.run() here because if a KeyboardInterrupt happens it would only wait 0.25 seconds
+        # before killing the dbt process.
+        with subprocess.Popen([executable, *args]) as process:
+            try:
+                process.communicate()
+                return_code = process.poll()
+            except KeyboardInterrupt:
+                try:
+                    # Give dbt time to wrap things up (e.g. cancelling any running queries).
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                raise
+            except:
+                process.kill()
+                raise
+
+        if return_code is not None and return_code != 0:
+            raise DbtError(return_code)
 
     @abstractmethod
     def uninstall(self, force: bool = False) -> None:
