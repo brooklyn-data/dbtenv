@@ -41,6 +41,10 @@ LOGGER.propagate = False
 LOGGER.setLevel(logging.DEBUG if string_is_true(os.environ.get(DEBUG_VAR, '')) else logging.INFO)
 logger = LOGGER
 
+# Lowercase the less critical levels so they don't attract as much attention.
+logging.addLevelName(logging.DEBUG, 'debug')
+logging.addLevelName(logging.INFO, 'info')
+
 
 class DbtenvError(RuntimeError):
     pass
