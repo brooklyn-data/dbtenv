@@ -1,3 +1,4 @@
+# Standard library
 import argparse
 import glob
 import json
@@ -6,6 +7,7 @@ import re
 import traceback
 from typing import Collection, List, Optional
 
+# Local
 import dbtenv
 from dbtenv import Args, DbtenvError, Environment, Subcommand, Version
 import dbtenv.install

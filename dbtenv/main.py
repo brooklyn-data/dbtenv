@@ -1,8 +1,10 @@
+# Standard library
 import argparse
 from enum import IntEnum
 import sys
 from typing import List
 
+# Local
 import dbtenv
 from dbtenv import Args, DbtenvError, DbtError, Environment, Installer
 import dbtenv.execute

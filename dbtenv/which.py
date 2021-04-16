@@ -1,6 +1,8 @@
+# Standard library
 import argparse
 from typing import List, Optional
 
+# Local
 import dbtenv
 from dbtenv import Args, Dbt, DbtenvError, Environment, Installer, Subcommand, Version
 import dbtenv.homebrew

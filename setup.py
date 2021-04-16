@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+# Standard library
 from distutils.core import setup
 
+# Local
 import dbtenv
 
 

@@ -1,3 +1,4 @@
+# Standard library
 import http
 import http.server
 import json
@@ -10,6 +11,7 @@ import threading
 from typing import List, Optional, Union
 import urllib.request
 
+# Local
 import dbtenv
 from dbtenv import Dbt, DbtenvError, Environment, Version
 

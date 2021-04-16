@@ -1,3 +1,4 @@
+# Standard library
 import glob
 import json
 import os
@@ -6,6 +7,7 @@ import re
 import subprocess
 from typing import List, Optional
 
+# Local
 import dbtenv
 from dbtenv import Dbt, DbtenvError, Environment, Version
 
