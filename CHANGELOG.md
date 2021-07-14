@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-## [0.1.1]
+## [1.1.0](https://github.com/brooklyn-data/dbtenv/compare/v1.0.0...v1.1.0) - 2021-07-14
 
 ### Added
 
