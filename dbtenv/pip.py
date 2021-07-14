@@ -96,9 +96,9 @@ class PipDbt(Dbt):
         python_major_version = int(python_version_match['major_version'])
         python_minor_version = int(python_version_match['minor_version'])
 
-        if (python_major_version, python_minor_version) >= (3, 9):
+        if self.version < Version('0.20') and (python_major_version, python_minor_version) >= (3, 9):
             raise DbtenvError(
-                f"Python {python_version} is being used, but dbt currently isn't compatible with Python 3.9 or above."
+                f"Python {python_version} is being used, but dbt versions before 0.20.0 aren't compatible with Python 3.9 or above."
             )
         elif self.version < Version('0.15') and (python_major_version, python_minor_version) >= (3, 8):
             raise DbtenvError(
