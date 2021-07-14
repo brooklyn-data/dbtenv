@@ -17,12 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support installation of dbt versions >= 0.20.0 in a Python 3.9 environment.
 
-### Changed
-
 ## [1.0.0](https://github.com/brooklyn-data/dbtenv/releases/tag/v1.0.0) - 2021-04-16
 
 ### Added
 
 - Initial release
-
-### Changed
