@@ -20,6 +20,8 @@ logger = dbtenv.LOGGER
 
 
 def get_installed_pip_dbt_versions(env: Environment) -> List[Version]:
+    if not os.path.isdir(env.venvs_directory):
+        return []
     with os.scandir(env.venvs_directory) as venvs_dir_scan:
         possible_versions = (Version(entry.name) for entry in venvs_dir_scan if entry.is_dir())
         return [version for version in possible_versions if PipDbt(env, version).is_installed()]
