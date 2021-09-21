@@ -38,7 +38,6 @@ Some tips when dbtenv is using pip:
 - You can have dbtenv only install Python packages that were actually available on the date the dbt version was released by setting a `DBTENV_SIMULATE_RELEASE_DATE=true` environment variable, or specifying `--simulate-release-date` when running `dbtenv install`.
   This can help if newer versions of dbt's dependencies are causing installation problems.
 - By default dbtenv uses whichever Python version it was installed with to install dbt, but that can be changed by setting a `DBTENV_PYTHON` environment variable to the path of a different Python executable, or specifying `--python <path>` when running `dbtenv install`.
-  - **dbt currently isn't compatible with Python 3.9 or above**, so if dbtenv was installed with Python 3.9 or above you will need to specify a compatible Python version to install dbt.
 
 ### Switching between dbt versions
 dbtenv determines which dbt version to use by trying to read it from the following sources, in this order, using the first one it finds:
