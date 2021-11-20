@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - If no compatible dbt version can be found then ignore dbt version requirements from installed packages in case they're simply out of date.
+- Upgrade pip to avoid problems with packages that might require newer pip features.
 
 ## [1.1.1](https://github.com/brooklyn-data/dbtenv/compare/v1.1.0...v1.1.1) - 2021-07-15
 

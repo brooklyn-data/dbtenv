@@ -52,6 +52,8 @@ class PipDbt(Dbt):
             raise DbtenvError(f"Failed to create virtual environment in `{self.venv_directory}`.")
 
         pip = self._find_pip()
+        # Upgrade pip to avoid problems with packages that might require newer pip features.
+        subprocess.run([pip, 'install', '--upgrade', 'pip'])
         # Install wheel to avoid pip falling back to using legacy `setup.py` installs.
         subprocess.run([pip, 'install', '--disable-pip-version-check', 'wheel'])
         pip_args = ['install', '--disable-pip-version-check']
