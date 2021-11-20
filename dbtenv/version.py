@@ -227,17 +227,25 @@ def try_get_max_compatible_version(versions: Collection[Version], requirements: 
 
 
 def try_get_project_version(env: Environment, preferred_version: Optional[Version] = None) -> Optional[Version]:
-    version_requirements = try_get_project_version_requirements(env.project_file)
-    requirements_project_files = [os.path.basename(env.project_file)]
+    project_version_requirements = try_get_project_version_requirements(env.project_file)
+    all_version_requirements = project_version_requirements.copy()
+    project_file = os.path.basename(env.project_file)
+    requirements_project_files = [project_file]
+    scope_decription = "the dbt project"
+    has_packages_with_version_requirements = False
 
     for package_project_file in glob.glob(os.path.join(env.project_directory, 'dbt_modules', '*', 'dbt_project.yml')):
         package_version_requirements = try_get_project_version_requirements(package_project_file)
         if package_version_requirements:
-            version_requirements.extend(package_version_requirements)
+            all_version_requirements.extend(package_version_requirements)
             requirements_project_files.append(os.path.relpath(package_project_file, env.project_directory))
+            has_packages_with_version_requirements = True
+
+    if has_packages_with_version_requirements:
+        scope_decription += " and its installed packages"
 
     if preferred_version:
-        for requirement in version_requirements:
+        for requirement in all_version_requirements:
             if not requirement.is_compatible_with(preferred_version):
                 logger.info(
                     f"Preferred version {preferred_version} (set by {preferred_version.source}) is incompatible with"
@@ -248,20 +256,37 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
             return preferred_version
 
     installed_versions = dbtenv.versions.get_installed_versions(env)
-    compatible_version = try_get_max_compatible_version(installed_versions, version_requirements)
+    compatible_version = try_get_max_compatible_version(installed_versions, all_version_requirements)
     if compatible_version:
         return Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
-    else:
-        logger.info("No installed versions are compatible with all version requirements in the dbt project.")
 
     installable_versions = dbtenv.versions.get_installable_versions(env)
-    compatible_version = try_get_max_compatible_version(installable_versions, version_requirements)
+    compatible_version = try_get_max_compatible_version(installable_versions, all_version_requirements)
     if compatible_version:
-        logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in the dbt project.")
+        logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in {scope_decription}.")
         return Version(compatible_version.raw_version, source=', '.join(requirements_project_files))
-    else:
-        logger.warning("No installable versions are compatible with all version requirements in the dbt project.")
-        return None
+
+    warning = f"No available versions are compatible with all version requirements in {scope_decription}."
+    if has_packages_with_version_requirements:
+        warning += "  You may need to upgrade installed packages by updating `packages.yml` and running dbt's `deps` sub-command."
+    logger.warning(warning)
+
+    if has_packages_with_version_requirements:
+        logger.debug("Trying to get dbt version for the project again while ignoring installed packages in case they're out of date.")
+
+        if preferred_version and all(requirement.is_compatible_with(preferred_version) for requirement in project_version_requirements):
+            return preferred_version
+
+        compatible_version = try_get_max_compatible_version(installed_versions, project_version_requirements)
+        if compatible_version:
+            return Version(compatible_version.raw_version, source=project_file)
+
+        compatible_version = try_get_max_compatible_version(installable_versions, project_version_requirements)
+        if compatible_version:
+            logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in the dbt project.")
+            return Version(compatible_version.raw_version, source=project_file)
+
+    return None
 
 
 def get_version(env: Environment) -> Version:
