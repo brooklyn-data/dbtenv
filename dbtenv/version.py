@@ -9,7 +9,7 @@ from typing import Collection, List, Optional
 
 # Local
 import dbtenv
-from dbtenv import Args, DbtenvError, Environment, Subcommand, Version
+from dbtenv import Args, Environment, Subcommand, Version
 import dbtenv.install
 import dbtenv.versions
 
@@ -84,7 +84,7 @@ class VersionSubcommand(Subcommand):
             else:
                 local_version = try_get_local_version(self.env)
                 if local_version:
-                    print(f"{local_version}  (set by {local_version.source})")
+                    print(f"{local_version}  ({local_version.source_description})")
                 else:
                     logger.info(f"No local dbt version has been set for `{self.env.working_directory}` using `{dbtenv.LOCAL_VERSION_FILE}` files.")
         elif args.project_dbt_version is not None:
@@ -97,10 +97,10 @@ class VersionSubcommand(Subcommand):
                 if project_version:
                     if preferred_version and project_version == preferred_version:
                         logger.info(
-                            f"Preferred version {preferred_version} (set by {preferred_version.source}) is compatible"
+                            f"Preferred version {preferred_version} ({preferred_version.source_description}) is compatible"
                             " with all version requirements in the dbt project."
                         )
-                    print(f"{project_version}  (set by {project_version.source})")
+                    print(f"{project_version}  ({project_version.source_description})")
                 # If no project version could be determined, try_get_project_version() will have already logged the reason why.
             else:
                 logger.error("No dbt project found.")
@@ -111,11 +111,8 @@ class VersionSubcommand(Subcommand):
             else:
                 logger.info(f"No dbt version has been set for the current shell using a {dbtenv.DBT_VERSION_VAR} environment variable.")
         else:
-            version = try_get_version(self.env)
-            if version:
-                print(f"{version}  (set by {version.source})")
-            else:
-                logger.info("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+            version = get_version(self.env)
+            print(f"{version}  ({version.source_description})")
 
 
 def read_version_file(file_path: str) -> Version:
@@ -208,26 +205,32 @@ def try_get_project_version_requirements(project_file: str) -> List[VersionRequi
     return []
 
 
+def get_max_version(versions: Collection[Version]) -> Version:
+    stable_versions = [version for version in versions if version.is_stable]
+    if stable_versions:
+        return sorted(stable_versions)[-1]
+    else:
+        return sorted(versions)[-1]
+
+
 def try_get_max_compatible_version(versions: Collection[Version], requirements: Collection[VersionRequirement]) -> Optional[Version]:
     compatible_versions = [
         version
         for version in versions
         if version.is_semantic and all(requirement.is_compatible_with(version) for requirement in requirements)
     ]
-    if not compatible_versions:
-        return None
-
-    compatible_stable_versions = [version for version in compatible_versions if version.is_stable]
-    if compatible_stable_versions:
-        compatible_stable_versions.sort()
-        return compatible_stable_versions[-1]
+    if compatible_versions:
+        return get_max_version(compatible_versions)
     else:
-        compatible_versions.sort()
-        return compatible_versions[-1]
+        return None
 
 
 def try_get_project_version(env: Environment, preferred_version: Optional[Version] = None) -> Optional[Version]:
     project_version_requirements = try_get_project_version_requirements(env.project_file)
+    if not project_version_requirements:
+        logger.debug(f"The dbt project has no version requirements.")
+        return None
+
     all_version_requirements = project_version_requirements.copy()
     project_file = os.path.basename(env.project_file)
     requirements_project_files = [project_file]
@@ -248,7 +251,7 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         for requirement in all_version_requirements:
             if not requirement.is_compatible_with(preferred_version):
                 logger.info(
-                    f"Preferred version {preferred_version} (set by {preferred_version.source}) is incompatible with"
+                    f"Preferred version {preferred_version} ({preferred_version.source_description}) is incompatible with"
                     f" the {requirement} requirement in `{os.path.relpath(requirement.source, env.project_directory)}`."
                 )
                 break
@@ -311,12 +314,11 @@ def get_version(env: Environment) -> Version:
     if preferred_version:
         return preferred_version
 
-    raise DbtenvError("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+    installed_versions = dbtenv.versions.get_installed_versions(env)
+    if installed_versions:
+        max_installed_version = get_max_version(installed_versions)
+        return Version(max_installed_version.raw_version, source_description="max installed version")
 
-
-def try_get_version(env: Environment) -> Optional[Version]:
-    try:
-        return get_version(env)
-    except Exception as error:
-        logger.debug(f"Error getting version:  {error}")
-        return None
+    installable_versions = dbtenv.versions.get_installable_versions(env)
+    max_installable_version = get_max_version(installable_versions)
+    return Version(max_installable_version.raw_version, source_description="max installable version")

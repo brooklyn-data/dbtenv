@@ -43,14 +43,14 @@ class VersionsSubcommand(Subcommand):
         versions.sort()
 
         if versions:
-            active_version = dbtenv.version.try_get_version(self.env)
+            active_version = dbtenv.version.get_version(self.env)
             logger.info("+ = installed, * = active")
             for version in versions:
                 line = "+ " if version in installed_versions else "  "
                 line += "* " if version == active_version else "  "
                 line += version.get_installer_version(self.env.primary_installer)
                 if version == active_version:
-                    line += f"  (set by {active_version.source})"
+                    line += f"  ({active_version.source_description})"
                 print(line)
         else:
             logger.info(f"No dbt installations found.")

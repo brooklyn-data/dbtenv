@@ -57,7 +57,7 @@ class ExecuteSubcommand(Subcommand):
             version = args.dbt_version
         else:
             version = dbtenv.version.get_version(self.env)
-            logger.info(f"Using dbt {version} (set by {version.source}).")
+            logger.info(f"Using dbt {version} ({version.source_description}).")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:

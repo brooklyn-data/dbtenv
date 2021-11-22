@@ -71,9 +71,13 @@ class Installer(Enum):
 
 
 class Version(distutils.version.LooseVersion):
-    def __init__(self, version: str, source: Optional[str] = None) -> None:
+    def __init__(self, version: str, source: Optional[str] = None, source_description: Optional[str] = None) -> None:
         self.pypi_version = self.homebrew_version = self.raw_version = version.strip()
         self.source = source
+        if source and not source_description:
+            self.source_description = f"set by {source}"
+        else:
+            self.source_description = source_description
 
         version_match = re.match(r'(?P<version>\d+\.\d+\.\d+)(-?(?P<prerelease>[a-z].*))?', self.raw_version)
         self.is_semantic = version_match is not None
