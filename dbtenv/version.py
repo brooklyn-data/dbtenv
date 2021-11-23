@@ -187,7 +187,11 @@ def try_get_project_version_requirements(project_file: str) -> List[VersionRequi
         with open(project_file) as file:
             project_file_text = file.read()
 
-        requirements_match = re.search(r'^require-dbt-version: *(?P<requirements>\[[^\]]+\]|\S+)', project_file_text, re.MULTILINE)
+        requirements_match = re.search(
+            r'''^require-dbt-version: *(?P<requirements>\[[^\]]+\]|"[^"]+"|'[^']+'|\S+)''',
+            project_file_text,
+            re.MULTILINE
+        )
         if requirements_match:
             requirements_text = requirements_match['requirements']
             logger.debug(f"Found dbt version requirements in `{project_file}`:  {requirements_text}")
