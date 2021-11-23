@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.1.1...HEAD)
 
 ### Added
+- New `--quiet` argument to not output any nonessential information as dbtenv runs.
 
 ### Changed
 - If no specific dbt version has been selected then default to using the max installed version (if any) or the max installable version (preferring stable versions).

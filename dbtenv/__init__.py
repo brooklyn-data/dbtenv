@@ -26,6 +26,7 @@ AUTO_INSTALL_VAR          = 'DBTENV_AUTO_INSTALL'
 DEBUG_VAR                 = 'DBTENV_DEBUG'
 DEFAULT_INSTALLER_VAR     = 'DBTENV_DEFAULT_INSTALLER'
 PYTHON_VAR                = 'DBTENV_PYTHON'
+QUIET_VAR                 = 'DBTENV_QUIET'
 SIMULATE_RELEASE_DATE_VAR = 'DBTENV_SIMULATE_RELEASE_DATE'
 
 
@@ -170,7 +171,32 @@ class Environment:
     @debug.setter
     def debug(self, value: bool) -> None:
         self._debug = value
-        LOGGER.setLevel(logging.DEBUG if self._debug else logging.INFO)
+        self.update_logging_level()
+
+    _quiet: Optional[bool] = None
+
+    @property
+    def quiet(self) -> bool:
+        if self._quiet is None:
+            if QUIET_VAR in self.env_vars:
+                self._quiet = string_is_true(self.env_vars[QUIET_VAR])
+            else:
+                self._quiet = False
+
+        return self._quiet
+
+    @quiet.setter
+    def quiet(self, value: bool) -> None:
+        self._quiet = value
+        self.update_logging_level()
+
+    def update_logging_level(self) -> None:
+        if self.debug:
+            LOGGER.setLevel(logging.DEBUG)
+        elif self.quiet:
+            LOGGER.setLevel(logging.ERROR)
+        else:
+            LOGGER.setLevel(logging.INFO)
 
     _default_installer: Optional[Installer] = None
 

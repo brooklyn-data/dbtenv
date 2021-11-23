@@ -56,8 +56,18 @@ def build_common_args_parser(env: Environment, dest_prefix: str = '') -> argpars
         const=True,
         help=f"""
             Output debug information as dbtenv runs.
-            The default is to not output debug information, but that can be overridden by setting a {dbtenv.DEBUG_VAR}
-            environment variable.
+            This can also be enabled by setting a {dbtenv.DEBUG_VAR} environment variable.
+        """
+    )
+    common_args_parser.add_argument(
+        '--quiet',
+        dest=f'{dest_prefix}quiet',
+        action='store_const',
+        const=True,
+        help=f"""
+            Don't output any nonessential information as dbtenv runs.
+            This can also be enabled by setting a {dbtenv.QUIET_VAR} environment variable.
+            Note that if outputting debug information has been enabled this setting will have no effect.
         """
     )
     if env.homebrew_installed:
@@ -133,6 +143,10 @@ def main(args: List[str] = None) -> None:
             env.debug = debug
 
         logger.debug(f"Parsed arguments = {parsed_args}")
+
+        quiet = parsed_args.quiet or parsed_args.get('subcommand_quiet')
+        if quiet:
+            env.quiet = quiet
 
         installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
         if installer:

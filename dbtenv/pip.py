@@ -155,7 +155,7 @@ class PipDbt(Dbt):
             if broken_python_symlinks:
                 broken_symlink = broken_python_symlinks[0]
                 broken_symlink_target = os.readlink(broken_symlink.path)
-                logger.warning(
+                logger.error(
                     f"The virtual environment for dbt {self.version.pypi_version} is broken because the"
                     f" `{broken_symlink.path}` symlink points to `{broken_symlink_target}`, which no longer exists."
                 )
