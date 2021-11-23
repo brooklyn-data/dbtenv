@@ -1,4 +1,5 @@
 # Standard library
+from datetime import date
 import http
 import http.server
 import json
@@ -66,7 +67,7 @@ class PipDbt(Dbt):
             package_source = "the Python Package Index"
             if self.env.simulate_release_date:
                 package_metadata = get_pypi_package_metadata('dbt')
-                release_date = package_metadata['releases'][self.version.pypi_version][0]['upload_time'][:10]
+                release_date = date.fromisoformat(package_metadata['releases'][self.version.pypi_version][0]['upload_time'][:10])
                 logger.info(f"Simulating release date {release_date} for dbt {self.version}.")
                 class ReleaseDateFilterPyPIRequestHandler(BaseDateFilterPyPIRequestHandler):
                     date = release_date
@@ -224,7 +225,7 @@ class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
             file['filename']
             for files in package_metadata['releases'].values()
             for file in files
-            if file['upload_time'][:10] > self.date
+            if date.fromisoformat(file['upload_time'][:10]) > self.date
         )
         file_link_pattern = r'<a href=[^>]+>(?P<file_name>[^<]+)</a>'
         excluded_file_link_count = 0
