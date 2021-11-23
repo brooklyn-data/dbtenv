@@ -14,7 +14,7 @@ import sys
 from typing import Any, List, Optional
 
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 DEFAULT_VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
 DEFAULT_VENVS_PREFIX    = ''
