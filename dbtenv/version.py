@@ -161,7 +161,7 @@ def try_get_shell_version(env: Environment) -> Optional[Version]:
 class VersionRequirement:
     def __init__(self, requirement: str, source: str) -> None:
         self.requirement = requirement
-        requirement_match = re.match(r'(?P<operator>[<>]=?)?(?P<version>.+)', requirement)
+        requirement_match = re.match(r'(?P<operator>[<>=]=?)?(?P<version>.+)', requirement)
         self.operator = requirement_match['operator'] or '=='
         self.version = Version(requirement_match['version'])
         self.source = source
