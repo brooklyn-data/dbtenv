@@ -26,7 +26,7 @@ setup(
             'dbtenv = dbtenv.main:main'
         ]
     },
-    python_requires='>=3.6.3',
+    python_requires='>=3.7.0',
     classifiers=[
         'Development Status :: 4 - Beta',
 
@@ -36,7 +36,6 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
 
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
