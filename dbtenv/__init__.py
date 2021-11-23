@@ -16,7 +16,8 @@ from typing import Any, List, Optional
 
 __version__ = '1.1.1'
 
-VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
+DEFAULT_VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
+DEFAULT_VENVS_PREFIX    = ''
 
 GLOBAL_VERSION_FILE = os.path.normpath('~/.dbt/version')
 LOCAL_VERSION_FILE  = '.dbt_version'
@@ -28,6 +29,8 @@ DEFAULT_INSTALLER_VAR     = 'DBTENV_DEFAULT_INSTALLER'
 PYTHON_VAR                = 'DBTENV_PYTHON'
 QUIET_VAR                 = 'DBTENV_QUIET'
 SIMULATE_RELEASE_DATE_VAR = 'DBTENV_SIMULATE_RELEASE_DATE'
+VENVS_DIRECTORY_VAR       = 'DBTENV_VENVS_DIRECTORY'
+VENVS_PREFIX_VAR          = 'DBTENV_VENVS_PREFIX'
 
 
 def string_is_true(value: str) -> bool:
@@ -143,7 +146,9 @@ class Environment:
         self.project_file = self.find_file_along_working_path('dbt_project.yml')
         self.project_directory = os.path.dirname(self.project_file) if self.project_file else None
 
-        self.venvs_directory     = os.path.expanduser(VENVS_DIRECTORY)
+        self.venvs_directory = os.path.expanduser(self.env_vars.get(VENVS_DIRECTORY_VAR) or DEFAULT_VENVS_DIRECTORY)
+        self.venvs_prefix = self.env_vars.get(VENVS_PREFIX_VAR) or DEFAULT_VENVS_PREFIX
+
         self.global_version_file = os.path.expanduser(GLOBAL_VERSION_FILE)
 
         self.homebrew_installed = False

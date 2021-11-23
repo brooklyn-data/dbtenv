@@ -35,6 +35,7 @@ You can run `dbtenv versions` to list the versions of dbt available to install, 
 If you don't want to have to run `dbtenv install <version>` manually, you can set a `DBTENV_AUTO_INSTALL=true` environment variable so that as you run commands like `dbtenv version` or `dbtenv execute` any dbt version specified that isn't already installed will be installed automatically.
 
 Some tips when dbtenv is using pip:
+- You can customize where the dbt version-specific Python virtual environments are created by setting `DBTENV_VENVS_DIRECTORY` and `DBTENV_VENVS_PREFIX` environment variables.
 - You can have dbtenv only install Python packages that were actually available on the date the dbt version was released by setting a `DBTENV_SIMULATE_RELEASE_DATE=true` environment variable, or specifying `--simulate-release-date` when running `dbtenv install`.
   This can help if newer versions of dbt's dependencies are causing installation problems.
 - By default dbtenv uses whichever Python version it was installed with to install dbt, but that can be changed by setting a `DBTENV_PYTHON` environment variable to the path of a different Python executable, or specifying `--python <path>` when running `dbtenv install`.
@@ -82,7 +83,7 @@ Some examples:
 Note that after adding such a `dbt` alias/function to your shell profile you'll need to reload the profile to activate it (e.g. by running `. ~/.bash_profile` in bash, or `. $PROFILE` in PowerShell).
 
 ### Uninstalling dbt versions
-You can run `dbtenv versions --installed` to list the versions of dbt that dbtenv has installed under `~/.dbt/versions` and/or with Homebrew, and then run `dbtenv uninstall <version>` to uninstall a version.
+You can run `dbtenv versions --installed` to list the versions of dbt that dbtenv has installed in Python virtual environments and/or with Homebrew, and then run `dbtenv uninstall <version>` to uninstall a version.
 
 
 ## Development

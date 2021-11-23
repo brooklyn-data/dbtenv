@@ -24,7 +24,12 @@ def get_installed_pip_dbt_versions(env: Environment) -> List[Version]:
     if not os.path.isdir(env.venvs_directory):
         return []
     with os.scandir(env.venvs_directory) as venvs_dir_scan:
-        possible_versions = (Version(entry.name) for entry in venvs_dir_scan if entry.is_dir())
+        venvs_prefix_length = len(env.venvs_prefix)
+        possible_versions = (
+            Version(entry.name[venvs_prefix_length:])
+            for entry in venvs_dir_scan
+            if entry.is_dir() and entry.name.startswith(env.venvs_prefix)
+        )
         return [version for version in possible_versions if PipDbt(env, version).is_installed()]
 
 
@@ -33,7 +38,7 @@ class PipDbt(Dbt):
 
     def __init__(self, env: Environment, version: Version) -> None:
         super().__init__(env, version)
-        self.venv_directory = os.path.join(env.venvs_directory, version.pypi_version)
+        self.venv_directory = os.path.join(env.venvs_directory, f'{env.venvs_prefix}{version.pypi_version}')
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False, package_location: Optional[str] = None, editable: bool = False) -> None:

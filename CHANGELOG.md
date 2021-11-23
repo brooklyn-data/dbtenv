@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - New `--quiet` argument to not output any nonessential information as dbtenv runs.
+- Allow location of dbt version-specific Python virtual environments to be configured with `DBTENV_VENVS_DIRECTORY` and `DBTENV_VENVS_PREFIX` environment variables.
 
 ### Changed
 - If no specific dbt version has been selected then default to using the max installed version (if any) or the max installable version (preferring stable versions).
-- If no compatible dbt version can be found for a dbt project then ignore dbt version requirements from installed packages in case they're simply out of date.
+- If no compatible dbt version can be found for a dbt project and its installed packages then ignore dbt version requirements from installed packages in case they're simply out of date.
 - When installing with pip, upgrade pip to avoid problems with packages that might require newer pip features.
 - When installing with Homebrew, automatically add the dbt Homebrew tap if necessary.
 
