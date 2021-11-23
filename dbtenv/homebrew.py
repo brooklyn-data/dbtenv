@@ -27,7 +27,20 @@ def get_dbt_version_keg_directory(env: Environment, version: Version) -> str:
     return os.path.join(env.homebrew_prefix_directory, 'opt', get_dbt_version_formula(version))
 
 
+def ensure_homebrew_dbt_tap() -> None:
+    # While it would be simplest to just always run `brew tap dbt-labs/dbt`, we need to first check for
+    # an existing dbt tap because the "dbt-labs" GitHub organization used to be named "fishtown-analytics"
+    # so people could have a "fishtown-analytics/dbt" tap, and having multiple dbt taps causes errors.
+    tap_list_result = subprocess.run(['brew', 'tap'], stdout=subprocess.PIPE, text=True)
+    if not re.search(r'\b(fishtown-analytics|dbt-labs)/dbt\b', tap_list_result.stdout):
+        logger.info('Adding the dbt Homebrew tap.')
+        tap_dbt_result = subprocess.run(['brew', 'tap', 'dbt-labs/dbt'])
+        if tap_dbt_result.returncode != 0:
+            raise DbtenvError("Failed to add the dbt Homebrew tap.")
+
+
 def get_homebrew_dbt_versions() -> List[Version]:
+    ensure_homebrew_dbt_tap()
     brew_args = ['info', '--json', 'dbt']
     logger.debug(f"Running `brew` with arguments {brew_args}.")
     brew_result = subprocess.run(['brew', *brew_args], stdout=subprocess.PIPE)
@@ -59,6 +72,8 @@ class HomebrewDbt(Dbt):
                 self.uninstall(force=True)
             else:
                 raise DbtenvError(f"dbt {self.version.homebrew_version} is already installed with Homebrew.")
+        else:
+            ensure_homebrew_dbt_tap()
 
         logger.info(f"Installing dbt {self.version.homebrew_version} with Homebrew.")
         brew_args = ['install', get_dbt_version_formula(self.version)]
