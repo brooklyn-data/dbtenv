@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If no compatible dbt version can be found for a dbt project and its installed packages then ignore dbt version requirements from installed packages in case they're simply out of date.
 - When installing with pip, upgrade pip to avoid problems with packages that might require newer pip features.
 - When installing with Homebrew, automatically add the dbt Homebrew tap if necessary.
+- Switch from distutils to setuptools.
 
 
 ## [1.1.1](https://github.com/brooklyn-data/dbtenv/compare/v1.1.0...v1.1.1) - 2021-07-15
