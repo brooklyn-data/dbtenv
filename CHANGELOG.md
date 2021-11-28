@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New `--quiet` argument to not output any nonessential information as dbtenv runs.
 - Allow location of dbt version-specific Python virtual environments to be configured with `DBTENV_VENVS_DIRECTORY` and `DBTENV_VENVS_PREFIX` environment variables.
+- Publish dbtenv package to PyPI.
 
 ### Changed
 - If no specific dbt version has been selected then default to using the max installed version (if any) or the max installable version (preferring stable versions).

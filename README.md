@@ -17,7 +17,8 @@ dbtenv lets you easily install and run multiple versions of [dbt](https://docs.g
 
 ## Installation
 
-Run `pip3 install git+https://github.com/brooklyn-data/dbtenv#egg=dbtenv`.
+1. Install [pipx](https://pypa.github.io/pipx/) if you haven't already.
+2. Run `pipx install dbtenv`.
 
 
 ## How it works
