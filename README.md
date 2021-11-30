@@ -40,6 +40,8 @@ dbtenv determines which dbt version to use by trying to read it from the followi
    - If the dbt version requirements specify a range of versions rather than an exact version, then dbtenv will try to read a preferred dbt version from the sources below and will use that version if it's compatible with the requirements.
 5. The first `.dbt_version` file found by searching the dbt project's parent directories.
 6. The `~/.dbt/version` file.
+7. The max installed dbt version (preferring stable versions).
+8. The max installable dbt version (preferring stable versions).
 
 You can:
 - Run `dbtenv version` to show which dbt version dbtenv determines dynamically based on the current environment.
