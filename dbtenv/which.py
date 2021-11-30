@@ -47,14 +47,10 @@ class WhichSubcommand(Subcommand):
         if args.dbt_version:
             version = args.dbt_version
         else:
-            version = dbtenv.version.try_get_version(self.env)
-            if version:
-                logger.info(f"Using dbt {version} (set by {version.source}).")
-            else:
-                logger.info("No dbt version has been set for the current shell, dbt project, local directory, or globally.")
+            version = dbtenv.version.get_version(self.env)
+            logger.info(f"Using dbt {version} ({version.source_description}).")
 
-        if version:
-            print(get_dbt(self.env, version).get_executable())
+        print(get_dbt(self.env, version).get_executable())
 
 
 def get_dbt(env: Environment, version: Version) -> Dbt:

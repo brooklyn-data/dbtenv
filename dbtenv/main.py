@@ -30,7 +30,8 @@ def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
         description=f"""
             Lets you easily install and run multiple versions of dbt using pip with Python virtual environments,
             or optionally using Homebrew on Mac or Linux.
-            Any dbt version-specific Python virtual environments are created under `{dbtenv.VENVS_DIRECTORY}`.
+            Any dbt version-specific Python virtual environments are created under `{dbtenv.DEFAULT_VENVS_DIRECTORY}` by default,
+            but that can be configured using {dbtenv.VENVS_DIRECTORY_VAR} and {dbtenv.VENVS_PREFIX_VAR} environment variables.
             The dbt version to use can be configured in your shell using a {dbtenv.DBT_VERSION_VAR} environment variable,
             in dbt projects using the `require-dbt-version` configuration, locally within specific directories using
             `{dbtenv.LOCAL_VERSION_FILE}` files, or globally in a `{dbtenv.GLOBAL_VERSION_FILE}` file.
@@ -56,8 +57,18 @@ def build_common_args_parser(env: Environment, dest_prefix: str = '') -> argpars
         const=True,
         help=f"""
             Output debug information as dbtenv runs.
-            The default is to not output debug information, but that can be overridden by setting a {dbtenv.DEBUG_VAR}
-            environment variable.
+            This can also be enabled by setting a {dbtenv.DEBUG_VAR} environment variable.
+        """
+    )
+    common_args_parser.add_argument(
+        '--quiet',
+        dest=f'{dest_prefix}quiet',
+        action='store_const',
+        const=True,
+        help=f"""
+            Don't output any nonessential information as dbtenv runs.
+            This can also be enabled by setting a {dbtenv.QUIET_VAR} environment variable.
+            Note that if outputting debug information has been enabled this setting will have no effect.
         """
     )
     if env.homebrew_installed:
@@ -133,6 +144,10 @@ def main(args: List[str] = None) -> None:
             env.debug = debug
 
         logger.debug(f"Parsed arguments = {parsed_args}")
+
+        quiet = parsed_args.quiet or parsed_args.get('subcommand_quiet')
+        if quiet:
+            env.quiet = quiet
 
         installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
         if installer:

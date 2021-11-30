@@ -70,7 +70,7 @@ class InstallSubcommand(Subcommand):
             version = args.dbt_version
         else:
             version = dbtenv.version.get_version(self.env)
-            logger.info(f"Using dbt {version} (set by {version.source}).")
+            logger.info(f"Using dbt {version} ({version.source_description}).")
 
         if self.env.primary_installer == Installer.PIP:
             pip_dbt = dbtenv.pip.PipDbt(self.env, version)

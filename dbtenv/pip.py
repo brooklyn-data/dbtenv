@@ -1,4 +1,5 @@
 # Standard library
+from datetime import date
 import http
 import http.server
 import json
@@ -23,7 +24,12 @@ def get_installed_pip_dbt_versions(env: Environment) -> List[Version]:
     if not os.path.isdir(env.venvs_directory):
         return []
     with os.scandir(env.venvs_directory) as venvs_dir_scan:
-        possible_versions = (Version(entry.name) for entry in venvs_dir_scan if entry.is_dir())
+        venvs_prefix_length = len(env.venvs_prefix)
+        possible_versions = (
+            Version(entry.name[venvs_prefix_length:])
+            for entry in venvs_dir_scan
+            if entry.is_dir() and entry.name.startswith(env.venvs_prefix)
+        )
         return [version for version in possible_versions if PipDbt(env, version).is_installed()]
 
 
@@ -32,7 +38,7 @@ class PipDbt(Dbt):
 
     def __init__(self, env: Environment, version: Version) -> None:
         super().__init__(env, version)
-        self.venv_directory = os.path.join(env.venvs_directory, version.pypi_version)
+        self.venv_directory = os.path.join(env.venvs_directory, f'{env.venvs_prefix}{version.pypi_version}')
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False, package_location: Optional[str] = None, editable: bool = False) -> None:
@@ -52,6 +58,8 @@ class PipDbt(Dbt):
             raise DbtenvError(f"Failed to create virtual environment in `{self.venv_directory}`.")
 
         pip = self._find_pip()
+        # Upgrade pip to avoid problems with packages that might require newer pip features.
+        subprocess.run([pip, 'install', '--upgrade', 'pip'])
         # Install wheel to avoid pip falling back to using legacy `setup.py` installs.
         subprocess.run([pip, 'install', '--disable-pip-version-check', 'wheel'])
         pip_args = ['install', '--disable-pip-version-check']
@@ -64,7 +72,7 @@ class PipDbt(Dbt):
             package_source = "the Python Package Index"
             if self.env.simulate_release_date:
                 package_metadata = get_pypi_package_metadata('dbt')
-                release_date = package_metadata['releases'][self.version.pypi_version][0]['upload_time'][:10]
+                release_date = date.fromisoformat(package_metadata['releases'][self.version.pypi_version][0]['upload_time'][:10])
                 logger.info(f"Simulating release date {release_date} for dbt {self.version}.")
                 class ReleaseDateFilterPyPIRequestHandler(BaseDateFilterPyPIRequestHandler):
                     date = release_date
@@ -152,7 +160,7 @@ class PipDbt(Dbt):
             if broken_python_symlinks:
                 broken_symlink = broken_python_symlinks[0]
                 broken_symlink_target = os.readlink(broken_symlink.path)
-                logger.warning(
+                logger.error(
                     f"The virtual environment for dbt {self.version.pypi_version} is broken because the"
                     f" `{broken_symlink.path}` symlink points to `{broken_symlink_target}`, which no longer exists."
                 )
@@ -222,7 +230,7 @@ class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):
             file['filename']
             for files in package_metadata['releases'].values()
             for file in files
-            if file['upload_time'][:10] > self.date
+            if date.fromisoformat(file['upload_time'][:10]) > self.date
         )
         file_link_pattern = r'<a href=[^>]+>(?P<file_name>[^<]+)</a>'
         excluded_file_link_count = 0
