@@ -2,18 +2,6 @@
 
 dbtenv lets you easily install and run multiple versions of [dbt](https://docs.getdbt.com/docs/introduction) using [pip](https://pip.pypa.io/) with [Python virtual environments](https://docs.python.org/3/library/venv.html), or optionally using [Homebrew](https://brew.sh/) on Mac or Linux.
 
-### Table of contents
-- **[Installation](#installation)**
-- **[How it works](#how-it-works)**
-  - [Using pip and/or Homebrew](#using-pip-andor-homebrew)
-  - [Installing dbt versions](#installing-dbt-versions)
-  - [Switching between dbt versions](#switching-between-dbt-versions)
-  - [Running dbt versions](#running-dbt-versions)
-  - [Running dbt with dbtenv more seamlessly](#running-dbt-with-dbtenv-more-seamlessly)
-  - [Uninstalling dbt versions](#uninstalling-dbt-versions)
-- **[Development](#development)**
-  - [Development setup](#development-setup)
-
 
 ## Installation
 
