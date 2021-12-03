@@ -2,6 +2,7 @@
 import argparse
 from enum import IntEnum
 import sys
+import importlib.metadata
 from typing import List
 
 # Local
@@ -42,7 +43,7 @@ def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
     root_args_parser.add_argument(
         '--version',
         action='version',
-        version=f'%(prog)s {dbtenv.__version__}',
+        version=f'%(prog)s {importlib.metadata.version("dbtenv")}',
         help="Show %(prog)s version and exit."
     )
     return root_args_parser
