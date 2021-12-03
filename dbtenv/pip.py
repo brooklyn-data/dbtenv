@@ -84,7 +84,18 @@ class PipDbt(Dbt):
                 # Versions prior to 0.19.1 just specified agate>=1.6, but agate 1.6.2 introduced a dependency on PyICU
                 # which causes installation problems, so exclude that like versions 0.19.1 and above do.
                 pip_args.append('agate>=1.6,<1.6.2')
-            pip_args.append(f'dbt=={self.version.pypi_version}')
+
+            # Use correct dbt package name depending on version
+            if self.version < Version('1.0.0'):
+                pip_args.append(f'dbt=={self.version.pypi_version}')
+            else:
+                # See comment on adapter - dbt-core version coordination
+                # https://getdbt.slack.com/archives/C02HM9AAXL4/p1637345945047100?thread_ts=1637323222.046100&cid=C02HM9AAXL4
+                pip_args.append(f'dbt-core=={self.version.pypi_version}')
+                pip_args.append(f'dbt-postgres~={self.version.major_minor_patch}')
+                pip_args.append(f'dbt-redshift~={self.version.major_minor_patch}')
+                pip_args.append(f'dbt-snowflake~={self.version.major_minor_patch}')
+                pip_args.append(f'dbt-bigquery~={self.version.major_minor_patch}')
         logger.info(f"Installing dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
 
         logger.debug(f"Running `{pip}` with arguments {pip_args}.")
