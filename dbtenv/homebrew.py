@@ -66,6 +66,10 @@ class HomebrewDbt(Dbt):
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False) -> None:
+        if self.version >= Version('1.0.0'):
+            raise DbtenvError(
+                "dbtenv does not support installing dbt versions greater than or equal to 1.0.0 through Homebrew. Configure dbtenv to use pip instead.")
+
         if self.is_installed():
             if force:
                 logger.info(f"dbt {self.version.homebrew_version} is already installed with Homebrew but will be reinstalled.")
