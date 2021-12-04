@@ -84,6 +84,8 @@ class Version(distutils.version.LooseVersion):
         version_match = re.match(r'(?P<version>\d+\.\d+\.\d+)(-?(?P<prerelease>[a-z].*))?', self.raw_version)
         self.is_semantic = version_match is not None
         self.is_stable = version_match is not None and not version_match['prerelease']
+        self.major_minor_patch = version_match['version'] if version_match is not None else None
+        self.prerelease = version_match['prerelease'] if version_match is not None else None
 
         # dbt pre-release versions are formatted slightly differently in PyPI and Homebrew.
         if version_match and version_match['prerelease']:
