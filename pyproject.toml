@@ -1,6 +1,31 @@
-[build-system]
-requires = [
-    "setuptools>=51",
-    "wheel"
+[tool.poetry]
+name = "dbtenv"
+version = "1.2.0"
+description = "dbtenv lets you easily install and run multiple versions of dbt using pip with Python virtual environments, or optionally using Homebrew on Mac or Linux."
+authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
+keywords = ["dbt"]
+license = "Apache 2.0"
+homepage = "https://github.com/brooklyn-data/dbtenv"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
 ]
-build-backend = "setuptools.build_meta"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+# CLI declaration
+dbtenv = "dbtenv.main:main"
