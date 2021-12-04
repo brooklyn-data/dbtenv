@@ -6,6 +6,7 @@ authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
 keywords = ["dbt"]
 license = "Apache 2.0"
 homepage = "https://github.com/brooklyn-data/dbtenv"
+readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: Apache Software License",

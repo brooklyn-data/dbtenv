@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0](https://github.com/brooklyn-data/dbtenv/compare/v1.2.0...v1.3.0) - 2021-12-04
 
 ### Added
-- Support for dbt 1.0.0.
+- Support for dbt 1.0.0 using pip.
 
 ### Changed
 - Use Poetry for local development and builds.
