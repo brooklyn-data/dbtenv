@@ -80,5 +80,7 @@ You can run `dbtenv versions --installed` to list the versions of dbt that dbten
 
 ### Development setup
 1. Clone this repository onto your computer.
-2. If you want to isolate the dbtenv development setup (e.g. because you have dbtenv installed normally), create and activate a [Python virtual environment](https://docs.python.org/3/library/venv.html).
-3. Run `pip3 install --editable <path to cloned repo>`.
+2. Install Poetry `pipx install poetry` ([What is pipx?](https://www.google.com/search?q=pipx&rlz=1C5GCEM_enGB953GB953&oq=Pipx&aqs=chrome.0.69i59i512j0i512l2j69i59j0i512l2j69i60l2.1010j0j7&sourceid=chrome&ie=UTF-8))
+3. Install this project into a virtual environment `poetry install`
+4. Activate the virtual environment `poetry shell`
+5. Any `dbtenv` commands will run using the local version of the project.
