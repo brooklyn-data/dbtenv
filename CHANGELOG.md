@@ -5,14 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
-## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.3.1...HEAD)
+## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.3.2...HEAD)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+## [1.3.2](https://github.com/brooklyn-data/dbtenv/compare/v1.3.1...1.3.2)
+
+### Added
+
+### Changed
+
+### Fixed
+- Remove Python 3.7 classifier from pyproject.toml
 
 ## [1.3.1](https://github.com/brooklyn-data/dbtenv/compare/v1.3.0...v1.3.1) - 2021-12-04
 
