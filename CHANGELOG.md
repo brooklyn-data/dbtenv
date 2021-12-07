@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.2.0...HEAD)
+## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.3.1...HEAD)
 
 ### Added
 
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-## [1.3.1](https://github.com/brooklyn-data/dbtenv/compare/v1.2.0...v1.3.0) - 2021-12-04
+## [1.3.1](https://github.com/brooklyn-data/dbtenv/compare/v1.3.0...v1.3.1) - 2021-12-04
 
 ### Added
 - Gracefully abort when dbt versions >= 1.0.0 attempted to install through Homebrew
