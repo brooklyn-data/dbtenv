@@ -96,6 +96,7 @@ class PipDbt(Dbt):
                 pip_args.append(f'dbt-redshift~={self.version.major_minor_patch}')
                 pip_args.append(f'dbt-snowflake~={self.version.major_minor_patch}')
                 pip_args.append(f'dbt-bigquery~={self.version.major_minor_patch}')
+                pip_args.append(f'dbt-databricks~={self.version.major_minor_patch}')
         logger.info(f"Installing dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
 
         logger.debug(f"Running `{pip}` with arguments {pip_args}.")
