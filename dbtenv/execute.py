@@ -1,5 +1,6 @@
 # Standard library
 import argparse
+import re
 from typing import List
 
 # Local
@@ -34,10 +35,10 @@ class ExecuteSubcommand(Subcommand):
         parser.add_argument(
             '--dbt',
             dest='dbt_version',
-            type=Version,
+            type=str,
             metavar='<dbt_version>',
             help="""
-                Exact version of dbt to execute.
+                dbt version to use (e.g. 1.0.1).
                 If not specified, the dbt version will be automatically detected from the environment.
             """
         )
@@ -53,11 +54,22 @@ class ExecuteSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
+        arg_target_name = None
+        for i, arg in enumerate(args.dbt_args):
+            if arg == "--target":
+                arg_target_name = args.dbt_args[i+1]
+                break
+        adapter_type = dbtenv.version.try_get_project_adapter_type(self.env.project_file, target_name=arg_target_name)
+        if not adapter_type:
+            logger.info("Could not determine adapter, either not running inside dbt project or no default target is set for the current project in profiles.yml.")
+            return
+
         if args.dbt_version:
-            version = args.dbt_version
+            version = Version(adapter_type=adapter_type, version=args.dbt_version)
         else:
-            version = dbtenv.version.get_version(self.env)
-            logger.info(f"Using dbt {version} ({version.source_description}).")
+            arg_target_name = None
+            version = dbtenv.version.get_version(self.env, adapter_type=adapter_type)
+            logger.info(f"Using {version} ({version.source_description}).")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:

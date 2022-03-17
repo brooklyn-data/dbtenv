@@ -29,10 +29,9 @@ def build_root_args_parser(env: Environment) -> argparse.ArgumentParser:
     common_args_parser = build_common_args_parser(env)
     root_args_parser = argparse.ArgumentParser(
         description=f"""
-            Lets you easily install and run multiple versions of dbt using pip with Python virtual environments,
-            or optionally using Homebrew on Mac or Linux.
+            Lets you easily install and run multiple versions of dbt using pip with Python virtual environments.
             Any dbt version-specific Python virtual environments are created under `{dbtenv.DEFAULT_VENVS_DIRECTORY}` by default,
-            but that can be configured using {dbtenv.VENVS_DIRECTORY_VAR} and {dbtenv.VENVS_PREFIX_VAR} environment variables.
+            but that can be configured using {dbtenv.VENVS_DIRECTORY_VAR} environment variable.
             The dbt version to use can be configured in your shell using a {dbtenv.DBT_VERSION_VAR} environment variable,
             in dbt projects using the `require-dbt-version` configuration, locally within specific directories using
             `{dbtenv.LOCAL_VERSION_FILE}` files, or globally in a `{dbtenv.GLOBAL_VERSION_FILE}` file.
@@ -72,17 +71,6 @@ def build_common_args_parser(env: Environment, dest_prefix: str = '') -> argpars
             Note that if outputting debug information has been enabled this setting will have no effect.
         """
     )
-    if env.homebrew_installed:
-        common_args_parser.add_argument(
-            '--installer',
-            dest=f'{dest_prefix}installer',
-            type=Installer,
-            choices=Installer,
-            help=f"""
-                Which installer to use.
-                The default is pip, but that can be overridden by setting a {dbtenv.DEFAULT_INSTALLER_VAR} environment variable.
-            """
-        )
     return common_args_parser
 
 

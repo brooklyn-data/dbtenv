@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dbtenv"
-version = "1.3.2"
-description = "dbtenv lets you easily install and run multiple versions of dbt using pip with Python virtual environments, or optionally using Homebrew on Mac or Linux."
+version = "2.0.0a1"
+description = "dbtenv is a version manager for dbt, automatically installing and switching to the needed adapter and version of dbt."
 authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
 keywords = ["dbt"]
 license = "Apache 2.0"
@@ -19,6 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8"
+PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 
