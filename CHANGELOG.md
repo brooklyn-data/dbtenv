@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Dropped support for Homebrew.
 - Previously created environments through dbtenv cannot be used, and will be recreated by dbtenv at the adapter-version level.
-- dbtenv's default behaviour is not to install missing dbt adapter versions automatically. It can be disabled by setting the `DBTENV_AUTO_INSTALL` environment variable to `false`.
+- dbtenv's default behaviour is to install missing dbt adapter versions automatically. It can be disabled by setting the `DBTENV_AUTO_INSTALL` environment variable to `false`.
 
 ### Fixed
 
