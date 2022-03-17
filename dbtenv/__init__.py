@@ -15,7 +15,6 @@ from typing import Any, List, Optional
 
 
 DEFAULT_VENVS_DIRECTORY = os.path.normpath('~/.dbt/versions')
-DEFAULT_VENVS_PREFIX    = ''
 
 GLOBAL_VERSION_FILE = os.path.normpath('~/.dbt/version')
 LOCAL_VERSION_FILE  = '.dbt_version'
@@ -28,7 +27,6 @@ PYTHON_VAR                = 'DBTENV_PYTHON'
 QUIET_VAR                 = 'DBTENV_QUIET'
 SIMULATE_RELEASE_DATE_VAR = 'DBTENV_SIMULATE_RELEASE_DATE'
 VENVS_DIRECTORY_VAR       = 'DBTENV_VENVS_DIRECTORY'
-VENVS_PREFIX_VAR          = 'DBTENV_VENVS_PREFIX'
 
 
 def string_is_true(value: str) -> bool:
@@ -66,71 +64,71 @@ class Args(argparse.Namespace):
 
 class Installer(Enum):
     PIP      = 'pip'
-    HOMEBREW = 'homebrew'
 
     def __str__(self) -> str:
         return self.value
 
 
 class Version(distutils.version.LooseVersion):
-    def __init__(self, version: str, source: Optional[str] = None, source_description: Optional[str] = None) -> None:
-        self.pypi_version = self.homebrew_version = self.raw_version = version.strip()
-        self.source = source
-        if source and not source_description:
-            self.source_description = f"set by {source}"
+    def __init__(self, pip_specifier: str = None, adapter_type: str = None, version: str = None, source: Optional[str] = None, source_description: Optional[str] = None) -> None:
+        if pip_specifier:
+            self.pip_specifier = pip_specifier
+            self.name, self.version = re.match(r"(.*)==(.*)", pip_specifier).groups()
+            self.pypi_version = self.version
         else:
-            self.source_description = source_description
+            self.name = f"dbt-{adapter_type}"
+            self.pypi_version = version
+            self.pip_specifier = f"{self.name}=={self.pypi_version}"
+        if not self.name.startswith('dbt'):
+            raise(Exception)
+        self.source_description = source_description
+        self.source = source
 
-        version_match = re.match(r'(?P<version>\d+\.\d+\.\d+)(-?(?P<prerelease>[a-z].*))?', self.raw_version)
+        version_match = re.match(r'(?P<version>\d+\.\d+\.\d+)(-?(?P<prerelease>[a-z].*))?', self.pypi_version)
         self.is_semantic = version_match is not None
         self.is_stable = version_match is not None and not version_match['prerelease']
         self.major_minor_patch = version_match['version'] if version_match is not None else None
         self.prerelease = version_match['prerelease'] if version_match is not None else None
 
-        # dbt pre-release versions are formatted slightly differently in PyPI and Homebrew.
+        # dbt pre-release versions are formatted slightly differently.
         if version_match and version_match['prerelease']:
             self.pypi_version     = f"{version_match['version']}{version_match['prerelease']}"
-            self.homebrew_version = f"{version_match['version']}-{version_match['prerelease']}"
 
-        # Standardize on the PyPI version for comparison and hashing.
         super().__init__(self.pypi_version)
 
     def __hash__(self) -> int:
         return self.pypi_version.__hash__()
 
     def __str__(self) -> str:
-        return self.raw_version
+        return self.pip_specifier
 
     def __repr__(self) -> str:
-        return f"Version('{self.raw_version}')"
+        return f"Version('{self.pip_specifier}')"
 
-    def _cmp(self, other: Any) -> int:
-        # Comparing standard integer-based versions to non-standard text versions will raise a TypeError.
-        # In such cases we'll fall back to comparing the entire version strings rather than the individual parts.
-        try:
-            return super()._cmp(other)
-        except:
-            if isinstance(other, str):
-                return self._str_cmp(other)
-            if isinstance(other, Version):
-                return self._str_cmp(other.pypi_version)
-            raise
-
-    def _str_cmp(self, other: str) -> int:
-        if self.pypi_version == other:
-            return 0
-        if self.pypi_version < other:
+    def _cmp(self, other: 'Position') -> int:
+        if self.name < other.name:
             return -1
-        if self.pypi_version > other:
+        if self.name > other.name:
+            return 1
+        if self.pypi_version == other.pypi_version:
+            return 0
+        if self.pypi_version < other.pypi_version:
+            return -1
+        if self.pypi_version > other.pypi_version:
             return 1
 
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, source):
+        if source and not self.source_description:
+            self.source_description = f"set by {source}"
+        self._source = source
+
     def get_installer_version(self, installer: Installer) -> str:
-        if installer == Installer.PIP:
-            return self.pypi_version
-        elif installer == Installer.HOMEBREW:
-            return self.homebrew_version
-        else:
-            return self.raw_version
+        return self.pypi_version
 
 
 class Environment:
@@ -147,19 +145,8 @@ class Environment:
         self.project_directory = os.path.dirname(self.project_file) if self.project_file else None
 
         self.venvs_directory = os.path.expanduser(self.env_vars.get(VENVS_DIRECTORY_VAR) or DEFAULT_VENVS_DIRECTORY)
-        self.venvs_prefix = self.env_vars.get(VENVS_PREFIX_VAR) or DEFAULT_VENVS_PREFIX
 
         self.global_version_file = os.path.expanduser(GLOBAL_VERSION_FILE)
-
-        self.homebrew_installed = False
-        self.homebrew_prefix_directory = self.env_vars.get('HOMEBREW_PREFIX')
-        if not self.homebrew_prefix_directory and self.os != 'Windows':
-            brew_executable = shutil.which('brew')
-            if brew_executable:
-                self.homebrew_prefix_directory = os.path.dirname(os.path.dirname(brew_executable))
-        if self.homebrew_prefix_directory and os.path.isdir(self.homebrew_prefix_directory):
-            self.homebrew_installed = True
-            logger.debug(f"Homebrew is installed with prefix `{self.homebrew_prefix_directory}`.")
 
     _debug: Optional[bool] = None
 
@@ -207,11 +194,7 @@ class Environment:
 
     @property
     def default_installer(self) -> Installer:
-        if self._default_installer is None:
-            if DEFAULT_INSTALLER_VAR in self.env_vars:
-                self._default_installer = Installer(self.env_vars[DEFAULT_INSTALLER_VAR].lower())
-            else:
-                self._default_installer = Installer.PIP
+        self._default_installer = Installer.PIP
 
         return self._default_installer
 
@@ -232,10 +215,6 @@ class Environment:
     @property
     def use_pip(self) -> bool:
         return not self.installer or self.installer == Installer.PIP
-
-    @property
-    def use_homebrew(self) -> bool:
-        return (not self.installer or self.installer == Installer.HOMEBREW) and self.homebrew_installed
 
     _python: Optional[str] = None
 
@@ -271,7 +250,7 @@ class Environment:
             if AUTO_INSTALL_VAR in self.env_vars:
                 self._auto_install = string_is_true(self.env_vars[AUTO_INSTALL_VAR])
             else:
-                self._auto_install = False
+                self._auto_install = True
 
         return self._auto_install
 

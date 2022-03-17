@@ -5,7 +5,6 @@ from typing import List
 # Local
 import dbtenv
 from dbtenv import Args, DbtenvError, Subcommand, Version
-import dbtenv.homebrew
 import dbtenv.pip
 
 
@@ -31,26 +30,20 @@ class UninstallSubcommand(Subcommand):
             help="Uninstall without prompting for confirmation."
         )
         parser.add_argument(
-            'dbt_version',
-            type=Version,
+            'dbt_pip_specifier',
+            type=str,
             metavar='<dbt_version>',
-            help="Exact version of dbt to uninstall."
+            help="dbt package (adapter) to uninstall, in pip specifier format (e.g. dbt-snowflake==1.0.1)."
         )
 
     def execute(self, args: Args) -> None:
+        version = Version(pip_specifier=args.dbt_pip_specifier)
         attempted_uninstalls = 0
 
-        if self.env.use_pip:
-            pip_dbt = dbtenv.pip.PipDbt(self.env, args.dbt_version)
-            if pip_dbt.is_installed():
-                pip_dbt.uninstall(force=args.force)
-                attempted_uninstalls += 1
-
-        if self.env.use_homebrew:
-            homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, args.dbt_version)
-            if homebrew_dbt.is_installed():
-                homebrew_dbt.uninstall(force=args.force)
-                attempted_uninstalls += 1
+        pip_dbt = dbtenv.pip.PipDbt(self.env, version)
+        if pip_dbt.is_installed():
+            pip_dbt.uninstall(force=args.force)
+            attempted_uninstalls += 1
 
         if attempted_uninstalls == 0:
-            raise DbtenvError(f"No dbt {args.dbt_version} installation found.")
+            raise DbtenvError(f"No {version} installation found.")

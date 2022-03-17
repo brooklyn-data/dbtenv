@@ -19,18 +19,47 @@ from dbtenv import Dbt, DbtenvError, Environment, Version
 
 logger = dbtenv.LOGGER
 
+DBT_ADAPTER_TYPES = [
+    'bigquery',
+    'clickhouse',
+    'databricks',
+    'databricks',
+    'dremio',
+    'exasol',
+    'firebolt',
+    'firebolt',
+    'materialize',
+    'materialize',
+    'oracle',
+    'postgres',
+    'presto',
+    'redshift',
+    'rockset',
+    'rockset',
+    'singlestore',
+    'singlestore',
+    'snowflake',
+    'spark',
+    'sqlserver',
+    'synapse',
+    'teradata',
+    'teradata',
+    'trino',
+    'trino',
+    'vertica',
+]
 
-def get_installed_pip_dbt_versions(env: Environment) -> List[Version]:
+
+def get_installed_pip_dbt_versions(env: Environment, adapter_type: Optional[str] = None) -> List[Version]:
     if not os.path.isdir(env.venvs_directory):
         return []
-    with os.scandir(env.venvs_directory) as venvs_dir_scan:
-        venvs_prefix_length = len(env.venvs_prefix)
-        possible_versions = (
-            Version(entry.name[venvs_prefix_length:])
-            for entry in venvs_dir_scan
-            if entry.is_dir() and entry.name.startswith(env.venvs_prefix)
-        )
-        return [version for version in possible_versions if PipDbt(env, version).is_installed()]
+    versions = []
+    for entry in os.scandir(env.venvs_directory):
+        if not adapter_type or entry.name.startswith(f"dbt-{adapter_type}"):
+            versions.append(
+                Version(pip_specifier=entry.name)
+            )
+    return versions
 
 
 class PipDbt(Dbt):
@@ -38,7 +67,7 @@ class PipDbt(Dbt):
 
     def __init__(self, env: Environment, version: Version) -> None:
         super().__init__(env, version)
-        self.venv_directory = os.path.join(env.venvs_directory, f'{env.venvs_prefix}{version.pypi_version}')
+        self.venv_directory = os.path.join(env.venvs_directory, version.pip_specifier)
         self._executable: Optional[str] = None
 
     def install(self, force: bool = False, package_location: Optional[str] = None, editable: bool = False) -> None:
@@ -80,23 +109,13 @@ class PipDbt(Dbt):
                 pip_filter_port = pip_filter_server.socket.getsockname()[1]
                 threading.Thread(target=pip_filter_server.serve_forever, daemon=True).start()
                 pip_args.extend(['--index-url', f'http://localhost:{pip_filter_port}/simple'])
-            elif self.version < Version('0.19.1'):
+            elif self.version.pypi_version < '0.19.1':
                 # Versions prior to 0.19.1 just specified agate>=1.6, but agate 1.6.2 introduced a dependency on PyICU
                 # which causes installation problems, so exclude that like versions 0.19.1 and above do.
                 pip_args.append('agate>=1.6,<1.6.2')
 
-            # Use correct dbt package name depending on version
-            if self.version < Version('1.0.0'):
-                pip_args.append(f'dbt=={self.version.pypi_version}')
-            else:
-                # See comment on adapter - dbt-core version coordination
-                # https://getdbt.slack.com/archives/C02HM9AAXL4/p1637345945047100?thread_ts=1637323222.046100&cid=C02HM9AAXL4
-                pip_args.append(f'dbt-core=={self.version.pypi_version}')
-                pip_args.append(f'dbt-postgres~={self.version.major_minor_patch}')
-                pip_args.append(f'dbt-redshift~={self.version.major_minor_patch}')
-                pip_args.append(f'dbt-snowflake~={self.version.major_minor_patch}')
-                pip_args.append(f'dbt-bigquery~={self.version.major_minor_patch}')
-        logger.info(f"Installing dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
+            pip_args.append(self.version.pip_specifier)
+        logger.info(f"Installing {self.version.pip_specifier} from {package_source} into `{self.venv_directory}`.")
 
         logger.debug(f"Running `{pip}` with arguments {pip_args}.")
         pip_result = subprocess.run([pip, *pip_args])
@@ -117,11 +136,11 @@ class PipDbt(Dbt):
         python_major_version = int(python_version_match['major_version'])
         python_minor_version = int(python_version_match['minor_version'])
 
-        if self.version < Version('0.20') and (python_major_version, python_minor_version) >= (3, 9):
+        if self.version.pypi_version < '0.20' and (python_major_version, python_minor_version) >= (3, 9):
             raise DbtenvError(
                 f"Python {python_version} is being used, but dbt versions before 0.20.0 aren't compatible with Python 3.9 or above."
             )
-        elif self.version < Version('0.15') and (python_major_version, python_minor_version) >= (3, 8):
+        elif self.version.pypi_version < '0.15' and (python_major_version, python_minor_version) >= (3, 8):
             raise DbtenvError(
                 f"Python {python_version} is being used, but dbt versions before 0.15 aren't compatible with Python 3.8 or above."
             )
@@ -184,7 +203,7 @@ class PipDbt(Dbt):
         if not self.is_installed():
             raise DbtenvError(f"No dbt {self.version.pypi_version} installation found in `{self.venv_directory}`.")
 
-        if force or dbtenv.string_is_true(input(f"Uninstall dbt {self.version.pypi_version} from `{self.venv_directory}`? ")):
+        if force or dbtenv.string_is_true(input(f"Uninstall `{self.venv_directory}`? ")):
             shutil.rmtree(self.venv_directory)
             self._executable = None
             logger.info(f"Successfully uninstalled dbt {self.version.pypi_version} from `{self.venv_directory}`.")
@@ -196,11 +215,16 @@ def get_pypi_package_metadata(package: str) -> str:
     with urllib.request.urlopen(package_json_url) as package_json_response:
         return json.load(package_json_response)
 
-
-def get_pypi_dbt_versions() -> List[Version]:
-    package_metadata = get_pypi_package_metadata('dbt')
-    possible_versions = ((Version(version), files) for version, files in package_metadata['releases'].items())
+def get_pypi_package_versions(adapter_type: str) -> List[Version]:
+    package_metadata = get_pypi_package_metadata(f"dbt-{adapter_type}")
+    possible_versions = ((Version(adapter_type=adapter_type, version=version), files) for version, files in package_metadata['releases'].items())
     return [version for version, files in possible_versions if any(not file['yanked'] for file in files)]
+
+def get_pypi_all_dbt_package_versions() -> List[Version]:
+    versions = []
+    for adapter_type in DBT_ADAPTER_TYPES:
+        versions += get_pypi_package_versions(adapter_type)
+    return versions
 
 
 class BaseDateFilterPyPIRequestHandler(http.server.BaseHTTPRequestHandler):

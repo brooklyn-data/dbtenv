@@ -5,7 +5,6 @@ from typing import List
 # Local
 import dbtenv
 from dbtenv import Args, DbtenvError, Environment, Installer, Subcommand, Version
-import dbtenv.homebrew
 import dbtenv.pip
 import dbtenv.version
 import dbtenv.which
@@ -16,8 +15,7 @@ logger = dbtenv.LOGGER
 
 class InstallSubcommand(Subcommand):
     """
-    Install the specified dbt version from the Python Package Index or the specified package location using pip,
-    or optionally using Homebrew on Mac or Linux.
+    Install the specified dbt version from the Python Package Index or the specified package location using pip.
     """
 
     name = 'install'
@@ -36,13 +34,13 @@ class InstallSubcommand(Subcommand):
             help="Install even if the dbt version appears to already be installed."
         )
         parser.add_argument(
-            'dbt_version',
+            'dbt_pip_specifier',
             nargs='?',
-            type=Version,
-            metavar='<dbt_version>',
+            type=str,
+            metavar='<dbt_pip_specifier>',
             help="""
-                Exact version of dbt to install.
-                If not specified, the dbt version will be automatically detected from the environment.
+                dbt package (adapter) to install, in pip specifier format (e.g. dbt-snowflake==1.0.1).
+                If not specified, dbtenv will attempt to identify the required adapter and version from the environment.
             """
         )
         parser.add_argument(
@@ -66,29 +64,20 @@ class InstallSubcommand(Subcommand):
         )
 
     def execute(self, args: Args) -> None:
-        if args.dbt_version:
-            version = args.dbt_version
+        if args.dbt_pip_specifier:
+            dbt_pip_specifier = args.dbt_pip_specifier
         else:
             version = dbtenv.version.get_version(self.env)
-            logger.info(f"Using dbt {version} ({version.source_description}).")
+            logger.info(f"Using {version} ({version.source_description}).")
 
-        if self.env.primary_installer == Installer.PIP:
-            pip_dbt = dbtenv.pip.PipDbt(self.env, version)
-            pip_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
-        elif self.env.primary_installer == Installer.HOMEBREW:
-            homebrew_dbt = dbtenv.homebrew.HomebrewDbt(self.env, version)
-            homebrew_dbt.install(force=args.force)
-        else:
-            raise DbtenvError(f"Unknown installer `{self.env.primary_installer}`.")
+        version = Version(pip_specifier=dbt_pip_specifier)
+
+        pip_dbt = dbtenv.pip.PipDbt(self.env, version)
+        pip_dbt.install(force=args.force, package_location=args.package_location, editable=args.editable)
 
 
 def install_dbt(env: Environment, version: Version) -> None:
-    if env.primary_installer == Installer.PIP:
-        dbtenv.pip.PipDbt(env, version).install()
-    elif env.primary_installer == Installer.HOMEBREW:
-        dbtenv.homebrew.HomebrewDbt(env, version).install()
-    else:
-        raise DbtenvError(f"Unknown installer `{env.primary_installer}`.")
+    dbtenv.pip.PipDbt(env, version).install()
 
 
 def ensure_dbt_is_installed(env: Environment, version: Version) -> None:

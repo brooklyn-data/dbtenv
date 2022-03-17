@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v1.3.2...HEAD)
+## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v2.0.0a1...HEAD)
 
 ### Added
 
@@ -13,7 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-## [1.3.2](https://github.com/brooklyn-data/dbtenv/compare/v1.3.1...1.3.2)
+## [2.0.0a1](https://github.com/brooklyn-data/dbtenv/compare/v1.3.2...v2.0.0a1)
+
+### Added
+- dbtenv now operates at the adapter-version level, introduced by dbt in version 1.0.0. The interface is identical to prior versions, dbtenv will automatically detect the needed adapter version from `profiles.yml`, or the `--adapter` argument set in a dbt command passed to `dbtenv --execute`.
+
+### Changed
+- Dropped support for Homebrew.
+- Previously created environments through dbtenv cannot be used, and will be recreated by dbtenv at the adapter-version level.
+- dbtenv's default behaviour is not to install missing dbt adapter versions automatically. It can be disabled by setting the `DBTENV_AUTO_INSTALL` environment variable to `false`.
+
+### Fixed
+
+## [1.3.2](https://github.com/brooklyn-data/dbtenv/compare/v1.3.1...v1.3.2)
 
 ### Added
 
