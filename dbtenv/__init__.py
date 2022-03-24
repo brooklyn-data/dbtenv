@@ -8,7 +8,6 @@ import os
 import os.path
 import platform
 import re
-import shutil
 import subprocess
 import sys
 from typing import Any, List, Optional
@@ -73,9 +72,11 @@ class Version(distutils.version.LooseVersion):
     def __init__(self, pip_specifier: str = None, adapter_type: str = None, version: str = None, source: Optional[str] = None, source_description: Optional[str] = None) -> None:
         if pip_specifier:
             self.pip_specifier = pip_specifier
-            self.name, self.version = re.match(r"(.*)==(.*)", pip_specifier).groups()
+            self.name, self.version = re.match(r"^(dbt-.+)==(.+)$", pip_specifier).groups()
+            self.adapter_type = self.name.replace("dbt-", "")
             self.pypi_version = self.version
         else:
+            self.adapter_type = adapter_type
             self.name = f"dbt-{adapter_type}"
             self.pypi_version = version
             self.pip_specifier = f"{self.name}=={self.pypi_version}"
