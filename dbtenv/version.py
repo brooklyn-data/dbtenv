@@ -11,7 +11,7 @@ import yaml
 
 # Local
 import dbtenv
-from dbtenv import Args, Environment, Subcommand, Version
+from dbtenv import Args, DbtenvError, Environment, Subcommand, Version
 import dbtenv.install
 import dbtenv.versions
 
@@ -39,7 +39,7 @@ class VersionSubcommand(Subcommand):
             '--global',
             dest='global_dbt_version',
             nargs='?',
-            type=Version,
+            type=str,
             const='',
             metavar='<dbt_version>',
             help=f"Show/set the dbt version globally using the `{dbtenv.GLOBAL_VERSION_FILE}` file."
@@ -48,7 +48,7 @@ class VersionSubcommand(Subcommand):
             '--local',
             dest='local_dbt_version',
             nargs='?',
-            type=Version,
+            type=str,
             const='',
             metavar='<dbt_version>',
             help=f"Show/set the dbt version for the local directory using `{dbtenv.LOCAL_VERSION_FILE}` files."
@@ -71,8 +71,15 @@ class VersionSubcommand(Subcommand):
     def execute(self, args: Args) -> None:
         if args.global_dbt_version is not None:
             if args.global_dbt_version != '':
-                dbtenv.install.ensure_dbt_is_installed(self.env, args.global_dbt_version)
-                set_global_version(self.env, args.global_dbt_version)
+                if bool(re.search(r"^(dbt-.+)==(.+)$", args.global_dbt_version)):
+                    version = Version(pip_specifier=args.global_dbt_version)
+                    dbtenv.install.ensure_dbt_is_installed(self.env, version)
+                    set_global_version(self.env, version.pip_specifier)
+                elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", args.global_dbt_version)):
+                    set_global_version(self.env, args.global_dbt_version)
+                else:
+                    logger.info("Argument value doesn't match a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0).")
+                    return
             else:
                 global_version = try_get_global_version(self.env)
                 if global_version:
@@ -81,8 +88,15 @@ class VersionSubcommand(Subcommand):
                     logger.info(f"No global dbt version has been set using the `{dbtenv.GLOBAL_VERSION_FILE}` file.")
         elif args.local_dbt_version is not None:
             if args.local_dbt_version != '':
-                dbtenv.install.ensure_dbt_is_installed(self.env, args.local_dbt_version)
-                set_local_version(self.env, args.local_dbt_version)
+                if bool(re.search(r"^(dbt-.+)==(.+)$", args.local_dbt_version)):
+                    version = Version(pip_specifier=args.local_dbt_version)
+                    dbtenv.install.ensure_dbt_is_installed(self.env, version)
+                    set_local_version(self.env, version.pip_specifier)
+                elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", args.local_dbt_version)):
+                    set_local_version(self.env, args.local_dbt_version)
+                else:
+                    logger.info("Argument value doesn't match a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0).")
+                    return
             else:
                 local_version = try_get_local_version(self.env)
                 if local_version:
@@ -116,51 +130,60 @@ class VersionSubcommand(Subcommand):
             version = get_version(self.env)
             if version:
                 print(f"{version}  ({version.source_description})")
-            else:
-                logger.info("Could not determine adapter, either not running inside dbt project or no default target is set for the current project in profiles.yml.")
 
 
-def read_version_file(file_path: str, adapter_type: str) -> Version:
+def read_version_file(file_path: str, adapter_type: Optional[str], source_description: str) -> Optional[Version]:
     with open(file_path, 'r') as file:
-        return Version(adapter_type=adapter_type, version=file.readline().strip(), source=file_path)
+        value = file.readline().strip()
+        if bool(re.search(r"^(dbt-.+)==(.+)$", value)):
+            return Version(pip_specifier=value, source_description=source_description)
+        elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", value)):
+            if adapter_type:
+                return Version(adapter_type=adapter_type, version=value, source_description=source_description)
+        else:
+            raise(DbtenvError(f"Invalid value in {file_path}: {value}"))
 
-
-def write_version_file(file_path: str, version: Version) -> None:
+def write_version_file(file_path: str, value: str) -> None:
     with open(file_path, 'w') as file:
-        file.write(str(version))
+        file.write(str(value))
 
 
-def try_get_global_version(env: Environment, adapter_type: str) -> Optional[Version]:
+def try_get_global_version(env: Environment, adapter_type: Optional[str]) -> Optional[Version]:
     if os.path.isfile(env.global_version_file):
-        return read_version_file(env.global_version_file, adapter_type)
+        return read_version_file(env.global_version_file, adapter_type, f"set by global version file {env.global_version_file}")
     else:
         return None
 
 
-def set_global_version(env: Environment, version: Version) -> None:
-    write_version_file(env.global_version_file, version)
-    logger.info(f"{version} is now set as the global dbt version in `{env.global_version_file}`.")
+def set_global_version(env: Environment, value: str) -> None:
+    write_version_file(env.global_version_file, value)
+    logger.info(f"{value} is now set as the global dbt version in `{env.global_version_file}`.")
 
 
-def try_get_local_version(env: Environment, adapter_type: str) -> Optional[Version]:
+def try_get_local_version(env: Environment, adapter_type: Optional[str]) -> Optional[Version]:
     version_file = env.find_file_along_working_path(dbtenv.LOCAL_VERSION_FILE)
     if version_file:
-        return read_version_file(version_file, adapter_type)
+        return read_version_file(version_file, adapter_type, f"set by local version file {version_file}")
     else:
         return None
 
 
-def set_local_version(env: Environment, version: Version) -> None:
+def set_local_version(env: Environment, value: str) -> None:
     version_file = os.path.join(env.working_directory, dbtenv.LOCAL_VERSION_FILE)
-    write_version_file(version_file, version)
-    logger.info(f"{version} is now set as the local dbt version in `{version_file}`.")
+    write_version_file(version_file, value)
+    logger.info(f"{value} is now set as the local dbt version in `{version_file}`.")
 
 
-def try_get_shell_version(env: Environment, adapter_type: str) -> Optional[Version]:
+def try_get_shell_version(env: Environment, adapter_type: Optional[str]) -> Optional[Version]:
     if dbtenv.DBT_VERSION_VAR in env.env_vars:
-        return Version(adapter_type=adapter_type, version=env.env_vars[dbtenv.DBT_VERSION_VAR], source=dbtenv.DBT_VERSION_VAR)
-    else:
-        return None
+        value = env.env_vars[dbtenv.DBT_VERSION_VAR]
+        if bool(re.search(r"^(dbt-.+)==(.+)$", value)):
+            return Version(pip_specifier=value)
+        elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", value)):
+            if adapter_type:
+                return Version(adapter_type=adapter_type, version=value)
+        else:
+            raise(DbtenvError(f"Invalid value in {dbtenv.DBT_VERSION_VAR} environment variable: {value}"))
 
 
 class VersionRequirement:
@@ -237,7 +260,10 @@ def try_get_project_adapter_type(project_file: str, target_name: Optional[str] =
 
     if not target_name:
         target_name = profiles_yml.get(profile_name, {}).get("target")
-    return profiles_yml.get(profile_name, {}).get("outputs", {}).get(target_name, {}).get("type")
+    adapter_type = profiles_yml.get(profile_name, {}).get("outputs", {}).get(target_name, {}).get("type")
+    if not adapter_type:
+        logger.info("Could not determine adapter type as no default target is set for the current project in profiles.yml.")
+    return adapter_type
 
 
 def try_get_project_version(env: Environment, preferred_version: Optional[Version] = None, adapter_type: Optional[str] = None) -> Optional[Version]:
@@ -250,21 +276,6 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
     project_file = os.path.basename(env.project_file)
     requirements_project_files = [project_file]
     scope_decription = "the dbt project"
-    has_packages_with_version_requirements = False
-
-    package_project_files = (
-        glob.glob(os.path.join(env.project_directory, 'dbt_modules', '*', 'dbt_project.yml')) +
-        glob.glob(os.path.join(env.project_directory, 'dbt_packages', '*', 'dbt_project.yml'))
-    )
-    for package_project_file in package_project_files:
-        package_version_requirements = try_get_project_version_requirements(package_project_file, adapter_type)
-        if package_version_requirements:
-            all_version_requirements.extend(package_version_requirements)
-            requirements_project_files.append(os.path.relpath(package_project_file, env.project_directory))
-            has_packages_with_version_requirements = True
-
-    if has_packages_with_version_requirements:
-        scope_decription += " and its installed packages"
 
     if preferred_version:
         for requirement in all_version_requirements:
@@ -291,34 +302,14 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
         return compatible_version
 
     warning = f"No available versions are compatible with all version requirements in {scope_decription}."
-    if has_packages_with_version_requirements:
-        warning += "  You may need to upgrade installed packages by updating `packages.yml` and running dbt's `deps` sub-command."
     logger.warning(warning)
-
-    if has_packages_with_version_requirements:
-        logger.debug("Trying to get dbt version for the project again while ignoring installed packages in case they're out of date.")
-
-        if preferred_version and all(requirement.is_compatible_with(preferred_version) for requirement in project_version_requirements):
-            return preferred_version
-
-        compatible_version = try_get_max_compatible_version(installed_versions, project_version_requirements)
-        if compatible_version:
-            compatible_version.source == project_file
-            return compatible_version
-
-        compatible_version = try_get_max_compatible_version(installable_versions, project_version_requirements)
-        if compatible_version:
-            logger.info(f"{compatible_version} is the latest installable version that is compatible with all version requirements in the dbt project.")
-            compatible_version.source = project_file
-            return compatible_version
 
     return None
 
 
 def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optional[Version]:
-    adapter_type = dbtenv.version.try_get_project_adapter_type(env.project_file)
     if not adapter_type:
-        return None
+        adapter_type = dbtenv.version.try_get_project_adapter_type(env.project_file)
 
     shell_version = try_get_shell_version(env, adapter_type)
     if shell_version:
@@ -332,6 +323,11 @@ def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optiona
     if global_version and not env.project_directory:
         return global_version
 
+    # All below options require an already known adapter type
+    if not adapter_type:
+        logger.info("Could not determine adapter type as no dbt --target arg specified, not running in dbt project with a default target, and no full pip specifier set in dbtenv's configuration.")
+        return None
+
     preferred_version = local_version or global_version
     if env.project_directory:
         project_version = try_get_project_version(env, preferred_version, adapter_type)
@@ -344,9 +340,9 @@ def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optiona
     installed_versions = dbtenv.versions.get_installed_versions(env, adapter_type=adapter_type)
     if installed_versions:
         max_installed_version = get_max_version(installed_versions)
-        return Version(adapter_type=adapter_type, version=max_installed_version.pypi_version, source_description="max installed version for current adapter")
+        return Version(adapter_type=adapter_type, version=max_installed_version.pypi_version, source_description="max installed stable version for current adapter")
 
     installable_versions = dbtenv.versions.get_installable_versions(env, adapter_type=adapter_type)
     max_installable_version = get_max_version(installable_versions)
-    max_installable_version.source_description = "max installable version for current adapter"
+    max_installable_version.source_description = "max installable stable version for current adapter"
     return max_installable_version

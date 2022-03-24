@@ -34,12 +34,12 @@ class ExecuteSubcommand(Subcommand):
         )
         parser.add_argument(
             '--dbt',
-            dest='dbt_version',
+            dest='dbt_version_specifier',
             type=str,
-            metavar='<dbt_version>',
+            metavar='<dbt_version_specifier>',
             help="""
-                dbt version to use (e.g. 1.0.1).
-                If not specified, the dbt version will be automatically detected from the environment.
+                dbt version (e.g. 1.0.0) or full pip specifier to use (e.g. dbt-snowflake==1.0.0).
+                dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
             """
         )
         parser.add_argument(
@@ -59,17 +59,26 @@ class ExecuteSubcommand(Subcommand):
             if arg == "--target":
                 arg_target_name = args.dbt_args[i+1]
                 break
+
         adapter_type = dbtenv.version.try_get_project_adapter_type(self.env.project_file, target_name=arg_target_name)
-        if not adapter_type:
-            logger.info("Could not determine adapter, either not running inside dbt project or no default target is set for the current project in profiles.yml.")
+        if args.dbt_version_specifier:
+            if bool(re.search(r"^(dbt-.+)==(.+)$", args.dbt_version_specifier)):
+                version = Version(pip_specifier=args.dbt_version_specifier, source_description="specified using --dbt arg")
+            elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", args.dbt_version_specifier)):
+                if not adapter_type:
+                    logger.info("Could not determine adapter type as no default target is set for the current project in profiles.yml.")
+                    return
+                version = Version(adapter_type=adapter_type, version=args.dbt_version_specifier, source_description="adapter type automatically detected, version specified using --dbt arg")
+            else:
+                logger.info("The argument passed to --dbt didn't match a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0).")
+                return
+        else:
+            version = dbtenv.version.get_version(self.env, adapter_type=adapter_type)
+
+        if not version:
             return
 
-        if args.dbt_version:
-            version = Version(adapter_type=adapter_type, version=args.dbt_version)
-        else:
-            arg_target_name = None
-            version = dbtenv.version.get_version(self.env, adapter_type=adapter_type)
-            logger.info(f"Using {version} ({version.source_description}).")
+        logger.info(f"Using {version} ({version.source_description}).")
 
         dbt = dbtenv.which.try_get_dbt(self.env, version)
         if not dbt:
