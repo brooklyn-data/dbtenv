@@ -133,15 +133,23 @@ class PipDbt(Dbt):
                     pip_filter_port = pip_filter_server.socket.getsockname()[1]
                     threading.Thread(target=pip_filter_server.serve_forever, daemon=True).start()
                     pip_args.extend(['--index-url', f'http://localhost:{pip_filter_port}/simple'])
-                elif self.version.pypi_version < '0.19.1':
+                if self.version.pypi_version < '0.19.1':
                     # Versions prior to 0.19.1 just specified agate>=1.6, but agate 1.6.2 introduced a dependency on PyICU
                     # which causes installation problems, so exclude that like versions 0.19.1 and above do.
                     pip_args.append('agate>=1.6,<1.6.2')
+                if self.version.pypi_version >= '0.15.0' < '0.16.0':
+                    # Versions ~=0.15.0 just specified Jinja2>=2.10, but dbt versions ~=0.15.0 are not compatible with
+                    # Jinja >= 3.0.0. https://github.com/dbt-labs/dbt-core/issues/2147
+                    pip_args.append('Jinja2<3')
+                if self.version.pypi_version >= '0.15.0' < '1.0.0':
+                    # Deprecation of soft_unicode in MarkupSafe==2.1.0 is not supported by Jinja2==2.11
+                    # https://github.com/dbt-labs/dbt-core/pull/4746
+                    pip_args.append('MarkupSafe==2.0.1')
 
                 pip_args.append(self.version.pip_specifier)
             logger.info(f"Installing {self.version.pip_specifier} from {package_source} into `{self.venv_directory}`.")
 
-            logger.debug(f"Running `{pip}` with arguments {pip_args}.")
+            logger.info(f"Running `{pip}` with arguments {pip_args}.")
             pip_result = subprocess.run([pip, *pip_args])
             if pip_result.returncode != 0:
                 raise DbtenvError(f"Failed to install dbt {self.version.pypi_version} from {package_source} into `{self.venv_directory}`.")
