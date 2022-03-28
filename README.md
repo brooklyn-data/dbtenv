@@ -8,6 +8,10 @@ dbtenv is a version manager for dbt, automatically installing and switching to t
 1. Install [pipx](https://pypa.github.io/pipx/) if you haven't already.
 2. Run `pipx install dbtenv`.
 
+## Basic example usage
+
+Run `dbtenv execute -- build` in a dbt project, and dbtenv will automatically download the required adapter and version for the project and run `dbt build`. We recommend [setting up an alias to dbtenv](https://github.com/brooklyn-data/dbtenv#running-dbt-with-dbtenv-more-seamlessly) so that you can run dbt commands as normal but through dbtenv.
+
 
 ## How it works
 
@@ -28,7 +32,7 @@ Some tips:
 
 ### Switching between dbt versions
 #### Adapter type
-If a dbtenv command is invoked from within a dbt project, dbtenv will try to determine the in-use adapter from the default set for the project's profile in `profiles.yml`. If the `--adapter` argument is set in the dbt command passed to `dbtenv execute`, dbtenv will use that adapter's type instead.
+If a dbtenv command is invoked from within a dbt project, dbtenv will try to determine the in-use adapter from the default set for the project's profile in `profiles.yml`. If the `--adapter` argument is set in the dbt command passed to `dbtenv execute`, dbtenv will use that adapter's type instead. If running outside of a dbt project, a pip specifier should be passed to dbtenv execute's `--dbt` argument so that dbtenv knows which adapter to use.
 
 #### dbt version
 
@@ -37,7 +41,7 @@ dbtenv determines which dbt version to use by trying to read it from the followi
 1. The `dbtenv execute` command's optional `--dbt <version>` argument.
 2. A `DBT_VERSION` environment variable.
 3. A `.dbt_version` file in the dbt project directory.
-4. The [dbt version requirements](https://docs.getdbt.com/reference/project-configs/require-dbt-version/) of the dbt project and any dbt packages it uses.
+4. The [dbt version requirements](https://docs.getdbt.com/reference/project-configs/require-dbt-version/) of the dbt project.
    - If the dbt version requirements specify a range of versions rather than an exact version, then dbtenv will try to read a preferred dbt version from the sources below and will use that version if it's compatible with the requirements.
 5. The first `.dbt_version` file found by searching the dbt project's parent directories.
 6. The `~/.dbt/version` file.
@@ -47,15 +51,17 @@ dbtenv determines which dbt version to use by trying to read it from the followi
 You can:
 - Run `dbtenv version` to show which dbt version dbtenv determines dynamically based on the current environment.
 - Run `dbtenv which` to show the full path to the executable of the dbt version dbtenv determines dynamically based on the current environment.
-- Run `dbtenv version --global <version>` to set the dbt version globally in the `~/.dbt/version` file.
-- Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file.
+- Run `dbtenv version --global <version>` to set the dbt version globally in the `~/.dbt/version` file. The `<version>` can be either a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
+- Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file. The `<version>` can be either a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
 
 ### Running dbt through dbtenv
 Run `dbtenv execute -- <dbt arguments>` to execute the dbt version determined dynamically based on the current environment, or run `dbtenv execute --dbt <version> -- <dbt arguments>` to execute the specified dbt version.
 
 For example:
 - `dbtenv execute -- run` will execute `dbt run` using the version determined dynamically based on the current environment.
-- `dbtenv execute --dbt 0.19.0 -- run` will execute `dbt run` using dbt 0.19.0.
+- `dbtenv execute --dbt 1.0.0 -- run` will execute `dbt run` using dbt 1.0.0, automatically detecting the required adapter from the default target in `profiles.yml`.
+- `dbtenv execute --dbt 1.0.0 -- run --target prod` will execute `dbt run` using dbt 1.0.0, using the required adapter for the 'prod' target in `profiles.yml`.
+- `dbtenv execute --dbt 1.0.0==dbt-bigquery -- run` will execute `dbt run` using dbt-bigquery==1.0.0.
 
 **Important:**  It's highly recommended to put two dashes with spaces on both sides before the list of dbt arguments (as shown in the examples above) so that dbtenv doesn't try to interpret the dbt arguments itself.
 

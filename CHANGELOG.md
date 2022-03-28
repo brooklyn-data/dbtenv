@@ -13,6 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [2.0.0](https://github.com/brooklyn-data/dbtenv/compare/v2.0.0a2...v2.0.0)
+
+### Added
+- dbtenv now operates at the adapter-version level, introduced by dbt in version 1.0.0. dbtenv can automatically detect the needed adapter version from `profiles.yml`, or the `--adapter` argument set in a dbt command passed to `dbtenv --execute`.
+- The execute command's `--dbt` argument can now take either a dbt version (e.g. 1.0.0) or full pip specifier to use (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
+- dbtenv's version command and config files can now use a dbt version (e.g. 1.0.0) or full pip specifier to use (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
+
+### Changed
+- Dropped support for Homebrew.
+- Previously created environments through dbtenv 1.0.0 will be ignored.
+- dbtenv's default behaviour is now to install missing dbt adapter versions automatically. It can be disabled by setting the `DBTENV_AUTO_INSTALL` environment variable to `false`.
+- Attempting to install a version of dbt which doesn't exist will exit cleanly, and provide a list of available versions for that adapter.
+- Failed dbt version installations exit cleanly, removing the created virtual environment.
+
+### Fixed
+- Only entries in the environment directory which are dbtenv 2.0.0 environments will be read as installed dbt versions, fixing an issue where dbtenv 1.0.0 environments caused a failure.
+- Fixed version command, and all dbtenv config files. These can now take either a dbt version (e.g. 1.0.0) or full pip specifier to use (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
+
 ## [2.0.0a2](https://github.com/brooklyn-data/dbtenv/compare/v2.0.0a1...v2.0.0a2)
 
 ### Added

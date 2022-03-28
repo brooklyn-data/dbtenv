@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dbtenv"
-version = "2.0.0a2"
+version = "2.0.0"
 description = "dbtenv is a version manager for dbt, automatically installing and switching to the needed adapter and version of dbt."
 authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
 keywords = ["dbt"]
