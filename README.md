@@ -2,15 +2,27 @@
 
 dbtenv is a version manager for dbt, automatically installing and switching to the needed adapter and version of [dbt](https://docs.getdbt.com/docs/introduction).
 
-
-## Installation
+## Quickstart
+### Installation
 
 1. Install [pipx](https://pypa.github.io/pipx/) if you haven't already.
 2. Run `pipx install dbtenv`.
 
-## Basic example usage
+### Usage
+`dbt` commands can be used as normal. dbtenv will automatically determine, install and use the required dbt adapter and version.
 
-Run `dbtenv execute -- build` in a dbt project, and dbtenv will automatically download the required adapter and version for the project and run `dbt build`. We recommend [setting up an alias to dbtenv](https://github.com/brooklyn-data/dbtenv#running-dbt-with-dbtenv-more-seamlessly) so that you can run dbt commands as normal but through dbtenv.
+Illustrative example
+```
+dbt --version
+dbtenv info:  Using dbt-bigquery==1.0.0 (set by dbt_project.yml).
+installed version: 1.0.4
+   latest version: 1.0.4
+
+Up to date!
+
+Plugins:
+  - bigquery: 1.0.0 - Up to date!
+```
 
 
 ## How it works
@@ -55,6 +67,16 @@ You can:
 - Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file. The `<version>` can be either a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
 
 ### Running dbt through dbtenv
+It's as simple as installing dbtenv, and carrying on as normal.
+
+The dbtenv package has two entrypoints:
+- `dbtenv`
+- `dbt`
+
+The `dbt` command acts as a direct shortcut to `dbtenv execute`, and means that dbtenv can used as a drop-in replacement to installing a dbt package directly.
+
+The `dbtenv` command is used to manage dbtenv's configuration.
+
 Run `dbtenv execute -- <dbt arguments>` to execute the dbt version determined dynamically based on the current environment, or run `dbtenv execute --dbt <version> -- <dbt arguments>` to execute the specified dbt version.
 
 For example:
@@ -64,21 +86,6 @@ For example:
 - `dbtenv execute --dbt 1.0.0==dbt-bigquery -- run` will execute `dbt run` using dbt-bigquery==1.0.0.
 
 **Important:**  It's highly recommended to put two dashes with spaces on both sides before the list of dbt arguments (as shown in the examples above) so that dbtenv doesn't try to interpret the dbt arguments itself.
-
-### Running dbt with dbtenv more seamlessly
-For a more seamless experience you can define a `dbt` alias or function in your shell to run `dbtenv execute -- <dbt arguments>` and dynamically determine which dbt version to use whenever you type dbt commands like `dbt run` or `dbt test`.
-
-Some examples:
-- In **bash** you could add the following alias in your `~/.bash_profile` file:
-  ```bash
-  alias dbt='dbtenv execute --'
-  ```
-- In **Windows PowerShell** aliases can't include additional arguments, but you could add the following function in your `~\Documents\PowerShell\Microsoft.PowerShell_profile.ps1` file:
-  ```PowerShell
-  function dbt { dbtenv execute -- @Args }
-  ```
-
-Note that after adding such a `dbt` alias/function to your shell profile you'll need to reload the profile to activate it (e.g. by running `. ~/.bash_profile` in bash, or `. $PROFILE` in PowerShell).
 
 ### Uninstalling dbt versions
 You can run `dbtenv versions --installed` to list the versions of dbt that dbtenv has installed in Python virtual environments and/or with Homebrew, and then run `dbtenv uninstall <version>` to uninstall a version.

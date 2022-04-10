@@ -30,3 +30,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 # CLI declaration
 dbtenv = "dbtenv.main:main"
+dbt = "dbtenv.main:main"
