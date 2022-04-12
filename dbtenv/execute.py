@@ -61,7 +61,7 @@ class ExecuteSubcommand(Subcommand):
                 break
 
         adapter_type = dbtenv.version.try_get_project_adapter_type(self.env.project_file, target_name=arg_target_name)
-        if getattr(args, 'dbt_version_specifier', None):
+        if args.dbt_version_specifier:
             if bool(re.search(r"^(dbt-.+)==(.+)$", args.dbt_version_specifier)):
                 version = Version(pip_specifier=args.dbt_version_specifier, source_description="specified using --dbt arg")
             elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", args.dbt_version_specifier)):

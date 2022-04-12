@@ -127,53 +127,51 @@ def main(args: List[str] = None) -> None:
 
         parsed_args = Args()
         if args_parser.prog == 'dbt':
-            # If the dbt entrypoint has been used, go straight to dbtenv's execute cubcommand
-            parsed_args.dbt_args = args
-            execute_subcommand.execute(parsed_args)
-        elif args_parser.prog == 'dbtenv':
+            # If the dbt entrypoint has been used, prefix the args with the execute subcommand
+            args = ['execute', '--'] + args
             args_parser.parse_args(args, namespace=parsed_args)
 
-            debug = parsed_args.debug or parsed_args.get('subcommand_debug')
-            if debug:
-                env.debug = debug
+        debug = parsed_args.debug or parsed_args.get('subcommand_debug')
+        if debug:
+            env.debug = debug
 
-            logger.debug(f"Parsed arguments = {parsed_args}")
+        logger.debug(f"Parsed arguments = {parsed_args}")
 
-            quiet = parsed_args.quiet or parsed_args.get('subcommand_quiet')
-            if quiet:
-                env.quiet = quiet
+        quiet = parsed_args.quiet or parsed_args.get('subcommand_quiet')
+        if quiet:
+            env.quiet = quiet
 
-            installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
-            if installer:
-                env.installer = installer
+        installer = parsed_args.get('installer') or parsed_args.get('subcommand_installer')
+        if installer:
+            env.installer = installer
 
-            python = parsed_args.get('python')
-            if python:
-                env.python = python
+        python = parsed_args.get('python')
+        if python:
+            env.python = python
 
-            simulate_release_date = parsed_args.get('simulate_release_date')
-            if simulate_release_date:
-                env.simulate_release_date = simulate_release_date
+        simulate_release_date = parsed_args.get('simulate_release_date')
+        if simulate_release_date:
+            env.simulate_release_date = simulate_release_date
 
-            subcommand = parsed_args.subcommand
-            if not subcommand:
-                args_parser.print_help()
-                sys.exit(ExitCode.FAILURE)
+        subcommand = parsed_args.subcommand
+        if not subcommand:
+            args_parser.print_help()
+            sys.exit(ExitCode.FAILURE)
 
-            if subcommand == versions_subcommand.name:
-                versions_subcommand.execute(parsed_args)
-            elif subcommand == install_subcommand.name:
-                install_subcommand.execute(parsed_args)
-            elif subcommand == version_subcommand.name:
-                version_subcommand.execute(parsed_args)
-            elif subcommand == which_subcommand.name:
-                which_subcommand.execute(parsed_args)
-            elif subcommand == execute_subcommand.name or subcommand in execute_subcommand.aliases:
-                execute_subcommand.execute(parsed_args)
-            elif subcommand == uninstall_subcommand.name:
-                uninstall_subcommand.execute(parsed_args)
-            else:
-                raise DbtenvError(f"Unknown sub-command `{subcommand}`.")
+        if subcommand == versions_subcommand.name:
+            versions_subcommand.execute(parsed_args)
+        elif subcommand == install_subcommand.name:
+            install_subcommand.execute(parsed_args)
+        elif subcommand == version_subcommand.name:
+            version_subcommand.execute(parsed_args)
+        elif subcommand == which_subcommand.name:
+            which_subcommand.execute(parsed_args)
+        elif subcommand == execute_subcommand.name or subcommand in execute_subcommand.aliases:
+            execute_subcommand.execute(parsed_args)
+        elif subcommand == uninstall_subcommand.name:
+            uninstall_subcommand.execute(parsed_args)
+        else:
+            raise DbtenvError(f"Unknown sub-command `{subcommand}`.")
     except DbtenvError as error:
         logger.error(error)
         sys.exit(ExitCode.FAILURE)
