@@ -316,7 +316,7 @@ def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optiona
         return shell_version
 
     local_version = try_get_local_version(env, adapter_type)
-    if local_version and (env.project_directory or local_version.source.startswith(env.project_directory)):
+    if local_version and (not env.project_directory or local_version.source.startswith(env.project_directory)):
         return local_version
 
     global_version = try_get_global_version(env, adapter_type)
