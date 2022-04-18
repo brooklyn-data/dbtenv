@@ -136,10 +136,10 @@ def read_version_file(file_path: str, adapter_type: Optional[str], source_descri
     with open(file_path, 'r') as file:
         value = file.readline().strip()
         if bool(re.search(r"^(dbt-.+)==(.+)$", value)):
-            return Version(pip_specifier=value, source_description=source_description)
+            return Version(pip_specifier=value, source=file_path, source_description=source_description)
         elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", value)):
             if adapter_type:
-                return Version(adapter_type=adapter_type, version=value, source_description=source_description)
+                return Version(adapter_type=adapter_type, version=value, source=file_path, source_description=source_description)
         else:
             raise(DbtenvError(f"Invalid value in {file_path}: {value}"))
 
@@ -195,7 +195,7 @@ class VersionRequirement:
         self.source = source
 
     def __str__(self) -> str:
-        return self.requirement
+        return self.version.name + self.requirement
 
     def is_compatible_with(self, version: Version) -> bool:
         if self.operator == '<':
