@@ -129,7 +129,7 @@ def main(args: List[str] = None) -> None:
         if args_parser.prog == 'dbt':
             # If the dbt entrypoint has been used, prefix the args with the execute subcommand
             args = ['execute', '--'] + args
-            args_parser.parse_args(args, namespace=parsed_args)
+        args_parser.parse_args(args, namespace=parsed_args)
 
         debug = parsed_args.debug or parsed_args.get('subcommand_debug')
         if debug:
