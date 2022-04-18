@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "dbtenv-dbt-alias"
 version = "1.0.0"
-description = "Installs a 'dbt' executable that is functionally equivalent to aliasing the dbt command to `dbtenv execute --`."
+description = "Routes dbt commands through dbtenv."
 authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
 keywords = ["dbt"]
 license = "Apache 2.0"
 homepage = "https://github.com/brooklyn-data/dbtenv"
+readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: Apache Software License",

@@ -24,7 +24,11 @@ jobs:
       - name: Build package
         run: python -m poetry build
 
+      - name: ls
+        run: ls
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dbtenv-dbt-alias/dist
