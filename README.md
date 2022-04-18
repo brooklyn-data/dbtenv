@@ -67,7 +67,7 @@ You can:
 - Run `dbtenv version --local <version>` to set the dbt version for the current directory in a `.dbt_version` file. The `<version>` can be either a dbt version (e.g. 1.0.0) or full pip specifier (e.g. dbt-snowflake==1.0.0). dbtenv will attempt to automatically detect the required adapter or version from the environment if not specified.
 
 ### Running dbt through dbtenv
-There are two ways of running dbt with dbtenv, the first is to use the `dbtenv execute` command, and the second is to install the `dbtenv-dbt-alias` package included in the `[dbt-alias]` extra, which created a `dbt` entrypoint which acts as a shortcut to `dbtenv execute`.
+There are two ways of running dbt with dbtenv, the first is to use the `dbtenv execute` command, and the second is to install the `dbtenv-dbt-alias` package included in the `[dbt-alias]` extra, creating a `dbt` entrypoint which acts as a shortcut to `dbtenv execute`.
 
 Run `dbtenv execute -- <dbt arguments>` to execute the dbt version determined automatically based on the current environment, or run `dbtenv execute --dbt <version> -- <dbt arguments>` to execute the specified dbt version.
 
