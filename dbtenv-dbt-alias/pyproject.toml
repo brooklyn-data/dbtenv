@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8"
-dbtenv = "==2.1.0"
+dbtenv = "==2.2.0"
 
 [tool.poetry.dev-dependencies]
 
