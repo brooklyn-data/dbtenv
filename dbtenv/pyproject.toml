@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "dbtenv"
+version = "2.0.0"
+description = "dbtenv is a version manager for dbt, automatically installing and switching to the needed adapter and version of dbt."
+authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
+keywords = ["dbt"]
+license = "Apache 2.0"
+homepage = "https://github.com/brooklyn-data/dbtenv"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+PyYAML = "^6.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+dbt-alias = ["dbtenv-dbt-alias"]
+
+[tool.poetry.scripts]
+# CLI declaration
+dbtenv = "dbtenv.main:main"

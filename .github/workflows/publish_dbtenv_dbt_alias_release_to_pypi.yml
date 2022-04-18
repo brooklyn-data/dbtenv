@@ -1,13 +1,13 @@
-name: Publish release to PyPI
+name: Publish dbtenv-dbt-alias release to PyPI
 
 on:
-  release:
-    types:
-      - published
   workflow_dispatch:
 
 jobs:
   publish_package:
+    defaults:
+      run:
+        working-directory: dbtenv-dbt-alias
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

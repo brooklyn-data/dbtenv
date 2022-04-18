@@ -126,7 +126,10 @@ def main(args: List[str] = None) -> None:
         uninstall_subcommand.add_args_parser(subparsers, [common_subcommand_args_parser])
 
         parsed_args = Args()
-        args_parser.parse_args(args, namespace=parsed_args)
+        if args_parser.prog == 'dbt':
+            # If the dbt entrypoint has been used, prefix the args with the execute subcommand
+            args = ['execute', '--'] + args
+            args_parser.parse_args(args, namespace=parsed_args)
 
         debug = parsed_args.debug or parsed_args.get('subcommand_debug')
         if debug:
