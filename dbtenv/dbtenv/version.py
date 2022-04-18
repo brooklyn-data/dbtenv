@@ -4,7 +4,7 @@ import glob
 import os.path
 import re
 import traceback
-from typing import Collection, List, Optional
+from typing import Collection, List, Optional, Tuple
 
 # External Libraries
 import yaml
@@ -246,24 +246,36 @@ def try_get_max_compatible_version(versions: Collection[Version], requirements: 
     else:
         return None
 
-def try_get_project_adapter_type(project_file: str, target_name: Optional[str] = None) -> Optional[str]:
+def try_get_project_adapter_type(project_file: str, target_name: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
     if not project_file:
-        return
+        return None, "not running inside dbt project"
     with open(project_file) as file:
         dbt_project_yml = yaml.safe_load(file)
 
     profile_name = dbt_project_yml["profile"]
 
     home = os.path.expanduser("~")
-    with open(os.path.join(home, ".dbt", "profiles.yml")) as file:
+    profiles_yml_filepath = os.path.join(home, ".dbt", "profiles.yml")
+    if not os.path.exists(profiles_yml_filepath):
+        return None, f"{profiles_yml_filepath} does not exist"
+
+    with open(profiles_yml_filepath) as file:
         profiles_yml = yaml.safe_load(file)
 
     if not target_name:
-        target_name = profiles_yml.get(profile_name, {}).get("target")
-    adapter_type = profiles_yml.get(profile_name, {}).get("outputs", {}).get(target_name, {}).get("type")
+        profile = profiles_yml.get(profile_name, {})
+        if not profile:
+            return None, f"no profile named {profile_name} found in {profiles_yml_filepath}"
+        target_name = profile.get("target")
+        if not target_name:
+            return None, f"no default target set for profile {profile_name} in {profiles_yml_filepath}"
+    target = profiles_yml.get(profile_name, {}).get("outputs", {}).get(target_name, {})
+    if not target:
+        return None, f"no target named {target_name} exists for profile {profile_name} in {profiles_yml_filepath}"
+    adapter_type = target.get("type")
     if not adapter_type:
-        logger.info("Could not determine adapter type as no default target is set for the current project in profiles.yml.")
-    return adapter_type
+        return None, f"no target type specified for target {target_name} in profile {profile_name} in {profiles_yml_filepath}"
+    return adapter_type, None
 
 
 def try_get_project_version(env: Environment, preferred_version: Optional[Version] = None, adapter_type: Optional[str] = None) -> Optional[Version]:
@@ -309,7 +321,7 @@ def try_get_project_version(env: Environment, preferred_version: Optional[Versio
 
 def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optional[Version]:
     if not adapter_type:
-        adapter_type = dbtenv.version.try_get_project_adapter_type(env.project_file)
+        adapter_type, no_adapter_type_reason = dbtenv.version.try_get_project_adapter_type(env.project_file)
 
     shell_version = try_get_shell_version(env, adapter_type)
     if shell_version:
@@ -325,7 +337,7 @@ def get_version(env: Environment, adapter_type: Optional[str] = None) -> Optiona
 
     # All below options require an already known adapter type
     if not adapter_type:
-        logger.info("Could not determine adapter type as no dbt --target arg specified, not running in dbt project with a default target, and no full pip specifier set in dbtenv's configuration.")
+        logger.info(f"Could not determine adapter type as {no_adapter_type_reason} and no full pip specifier set in dbtenv's configuration.")
         return None
 
     preferred_version = local_version or global_version
