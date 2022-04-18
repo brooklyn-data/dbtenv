@@ -60,13 +60,13 @@ class ExecuteSubcommand(Subcommand):
                 arg_target_name = args.dbt_args[i+1]
                 break
 
-        adapter_type = dbtenv.version.try_get_project_adapter_type(self.env.project_file, target_name=arg_target_name)
+        adapter_type, no_adapter_type_reason = dbtenv.version.try_get_project_adapter_type(self.env.project_file, target_name=arg_target_name)
         if args.dbt_version_specifier:
             if bool(re.search(r"^(dbt-.+)==(.+)$", args.dbt_version_specifier)):
                 version = Version(pip_specifier=args.dbt_version_specifier, source_description="specified using --dbt arg")
             elif bool(re.search(r"^[0-9\.]+[a-z0-9]*$", args.dbt_version_specifier)):
                 if not adapter_type:
-                    logger.info("Could not determine adapter type as no default target is set for the current project in profiles.yml.")
+                    logger.info(f"Could not determine adapter type as {no_adapter_type_reason} and no full pip specifier set in dbtenv's configuration.")
                     return
                 version = Version(adapter_type=adapter_type, version=args.dbt_version_specifier, source_description="adapter type automatically detected, version specified using --dbt arg")
             else:

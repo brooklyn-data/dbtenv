@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added compatibility with `dbtenv-dbt-alias` package which installs `dbt` as a direct entrypoint to dbtenv. This removes the need to configure an alias from dbt to dbtenv execute. Running `pip install dbtenv[dbt-alias]` installs both dbtenv and the alias.
+- Improved logging for cases where dbtenv cannot determine the needed adapter type.
 ### Changed
 
 ### Fixed
+- Fixed a bug encountered when using local version files.
 
 ## [2.0.0](https://github.com/brooklyn-data/dbtenv/compare/v2.0.0a2...v2.0.0)
 
