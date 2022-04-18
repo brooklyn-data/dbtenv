@@ -5,11 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v2.1.0...HEAD)
+## [Unreleased](https://github.com/brooklyn-data/dbtenv/compare/v2.2.0...HEAD)
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+## [2.2.0](https://github.com/brooklyn-data/dbtenv/compare/v2.1.0...v2.2.0)
+
+### Added
+
+### Changed
+- Removed `dbtenv[dbt-alias]` extra. Instead, install `dbtenv-dbt-alias` directly. `dbtenv-dbt-alias` is identical to `dbtenv`, with the exception of adding a `dbt` entry point. The `dbt` command then acts as a direct shortcut to `dbtenv execute --`, and means that dbtenv can used as a drop-in replacement to installing dbt normally.
+- `dbtenv-dbt-alias` package is now versioned identically to `dbtenv`.
 
 ### Fixed
 

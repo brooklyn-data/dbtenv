@@ -6,24 +6,31 @@ dbtenv is a version manager for dbt, automatically installing and switching to t
 ### Installation
 
 1. Install [pipx](https://pypa.github.io/pipx/) ([What is pipx?](https://www.google.com/search?q=pipx&rlz=1C5GCEM_enGB953GB953&oq=Pipx&aqs=chrome.0.69i59i512j0i512l2j69i59j0i512l2j69i60l2.1010j0j7&sourceid=chrome&ie=UTF-8)).
-2. Run `pipx install dbtenv[dbt-alias]`.
+2. Run `pipx install dbtenv-dbt-alias`
 
 ### Usage
-If the `dbt-alias` extra is used (`dbtenv[dbt-alias]`), dbt commands can be used as normal and will be routed through dbtenv. dbtenv will automatically determine, install and use the required dbt adapter and version.
+If `dbtenv-dbt-alias` is installed per the above, dbt commands can be used as normal and will be routed through dbtenv. dbtenv will automatically determine, install and use the required dbt adapter and version.
 
 Illustrative example
 ```
-dbt --version
+➜  dev/dbt_project ✗ dbt compile
 dbtenv info:  Using dbt-bigquery==1.0.0 (set by dbt_project.yml).
-installed version: 1.0.4
-   latest version: 1.0.4
+10:48:43  Running with dbt=1.0.4
 
-Up to date!
-
-Plugins:
-  - bigquery: 1.0.0 - Up to date!
+10:48:45  Found 73 models, 142 tests, 2 snapshots, 0 analyses, 383 macros, 0 operations, 0 seed files, 44 sources, 0 exposures, 0 metrics
+10:48:45
+10:49:14  Concurrency: 1 threads (target='dev')
+10:49:14
+10:49:20  Done.
 ```
 
+## Installation Options
+
+There are two packages available for installation:
+- `dbtenv`
+- `dbtenv-dbt-alias`
+
+`dbtenv-dbt-alias` is identical to `dbtenv`, with the exception of adding a `dbt` entry point. The `dbt` command then acts as a direct shortcut to `dbtenv execute --`, and means that dbtenv can used as a drop-in replacement to installing dbt normally.
 
 ## Available Commands
 
@@ -34,6 +41,10 @@ Plugins:
 - `dbtenv version` - Print the dbt version dbtenv determines automatically for the current environment.
 - `dbtenv which` - Print the full path to the executable of the dbt version dbtenv determines automatically for the current environment.
 - `dbtenv execute` - Execute a dbt command.
+
+If `dbtenv-dbt-alias` is installed:
+- All the above plus:
+- `dbt <args>` - The dbt CLI.
 
 
 ## dbt Version Management
@@ -69,9 +80,9 @@ You can:
 
 ## Running dbt through dbtenv
 
-### dbt-alias
+### If dbtenv-dbt-alias installed
 
-The `dbtenv-dbt-alias` package creates an entrypoint for the `dbt` command to route through dbtenv. The package is installable using the `[dbt-alias]` extra when installing dbtenv. The `dbt` command then acts as a direct shortcut to `dbtenv execute --`, and means that dbtenv can used as a drop-in replacement to installing dbt normally.
+The `dbt` command then acts as a direct shortcut to `dbtenv execute --`, and means that dbtenv can used as a drop-in replacement to installing dbt normally. dbtenv will automatically identify which package and version of dbt to use. If you need to manually specify a dbt package version to run with, use the `dbtenv execute` command.
 
 ### dbtenv execute
 
@@ -81,7 +92,7 @@ For example:
 - `dbtenv execute -- run` will execute `dbt run` using the version determined automatically from the current environment.
 - `dbtenv execute --dbt 1.0.0 -- run` will execute `dbt run` using dbt 1.0.0, automatically detecting the required adapter from the default target in `profiles.yml`.
 - `dbtenv execute --dbt 1.0.0 -- run --target prod` will execute `dbt run` using dbt 1.0.0, using the required adapter for the 'prod' target in `profiles.yml`.
-- `dbtenv execute --dbt 1.0.0==dbt-bigquery -- run` will execute `dbt run` using dbt-bigquery==1.0.0.
+- `dbtenv execute --dbt dbt-bigquery==1.0.0 -- run` will execute `dbt run` using dbt-bigquery==1.0.0.
 
 
 ## Development
