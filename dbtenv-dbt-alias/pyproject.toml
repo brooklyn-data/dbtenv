@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "dbtenv-dbt-alias"
+version = "1.0.0"
+description = "Installs a 'dbt' executable that is functionally equivalent to aliasing the dbt command to `dbtenv execute --`."
+authors = ["Brooklyn Data Co. <hello@brooklyndata.co>"]
+keywords = ["dbt"]
+license = "Apache 2.0"
+homepage = "https://github.com/brooklyn-data/dbtenv"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+dbtenv = ">=2.1.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+# CLI declaration
+dbt = "dbtenv.main:main"
