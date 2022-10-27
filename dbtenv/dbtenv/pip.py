@@ -130,7 +130,7 @@ class PipDbt(Dbt):
                     # Versions prior to 0.19.1 just specified agate>=1.6, but agate 1.6.2 introduced a dependency on PyICU
                     # which causes installation problems, so exclude that like versions 0.19.1 and above do.
                     pip_args.append('agate>=1.6,<1.6.2')
-                if self.version.pypi_version >= '0.15.0' < '0.16.0':
+                if '0.16.0' > self.version.pypi_version >= '0.15.0':
                     # Versions ~=0.15.0 just specified Jinja2>=2.10, but dbt versions ~=0.15.0 are not compatible with
                     # Jinja >= 3.0.0. https://github.com/dbt-labs/dbt-core/issues/2147
                     pip_args.append('Jinja2<3')
